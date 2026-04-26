@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Crown Decode™ | Studio HME</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #fafaf8; color: #1a1a1a;
+      padding: 1.5rem 1rem 3rem;
+    }
+    .wrap { max-width: 620px; margin: 0 auto; }
+    h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+    .sub { font-size: 13px; color: #666; margin-bottom: 1.25rem; line-height: 1.5; }
+
+    /* Input methods */
+    .input-tabs { display: flex; gap: 8px; margin-bottom: 12px; }
+    .tab-btn {
+      flex: 1; padding: 10px; border: 1.5px solid #ddd; border-radius: 8px;
+      background: #fff; font-size: 13px; cursor: pointer; font-weight: 500;
+      color: #666; transition: all 0.15s;
+    }
+    .tab-btn.active { border-color: #1a1a1a; color: #1a1a1a; background: #f8f9fa; }
+
+    /* Camera section */
+    .camera-section { display: none; }
+    .camera-section.visible { display: block; }
+    .upload-area {
+      border: 2px dashed #ddd; border-radius: 10px; padding: 2rem 1rem;
+      text-align: center; cursor: pointer; background: #fff;
+      transition: border-color 0.15s;
+    }
+    .upload-area:hover { border-color: #999; }
+    .upload-icon { font-size: 2rem; margin-bottom: 8px; }
+    .upload-label { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+    .upload-hint { font-size: 12px; color: #868e96; }
+    #imageInput { display: none; }
+    .preview-img {
+      width: 100%; border-radius: 8px; margin-top: 12px;
+      border: 1px solid #dee2e6; display: none;
+    }
+    .extracted-box { margin-top: 12px; display: none; }
+    .extracted-label { font-size: 11px; font-weight: 600; color: #868e96; letter-spacing: 0.05em; margin-bottom: 6px; }
+    .extracted-text {
+      width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px;
+      font-size: 12px; font-family: inherit; resize: vertical; min-height: 80px;
+      background: #f8f9fa; color: #1a1a1a;
+    }
+
+    /* Manual section */
+    .manual-section { display: none; }
+    .manual-section.visible { display: block; }
+    textarea {
+      width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;
+      font-size: 13px; font-family: inherit; resize: vertical;
+      background: #fff; min-height: 120px;
+    }
+    textarea:focus, .extracted-text:focus { outline: 2px solid #1a1a1a; border-color: transparent; }
+
+    button {
+      display: block; width: 100%; margin-top: 10px; padding: 12px;
+      background: #1a1a1a; color: #fff; border: none; border-radius: 8px;
+      font-size: 14px; font-weight: 500; cursor: pointer;
+    }
+    button:disabled { background: #999; cursor: not-allowed; }
+    button.secondary {
+      background: transparent; color: #1a1a1a;
+      border: 1.5px solid #ddd; margin-top: 8px;
+    }
+    button.outline {
+      background: transparent; color: #1a1a1a;
+      border: 1.5px solid #1a1a1a; margin-top: 8px;
+    }
+
+    /* Results */
+    .card {
+      background: #fff; border: 1px solid #e8e8e8; border-radius: 10px;
+      padding: 1.25rem; margin-bottom: 10px;
+    }
+    .pass-label { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .pass-num {
+      width: 24px; height: 24px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 600; flex-shrink: 0;
+    }
+    .pass-num.blue { background: #eff4ff; color: #3b5bdb; border: 1px solid #bac8ff; }
+    .pass-num.green { background: #ebfbee; color: #2f9e44; border: 1px solid #b2f2bb; }
+    .pass-num.amber { background: #fff9db; color: #e67700; border: 1px solid #ffec99; }
+    .pass-title { font-weight: 500; font-size: 14px; }
+    .tag {
+      display: inline-block; padding: 3px 9px; border-radius: 10px;
+      font-size: 12px; margin: 2px 3px 2px 0;
+      background: #f1f3f5; color: #495057; border: 1px solid #dee2e6;
+    }
+    .tag.blue { background: #eff4ff; color: #3b5bdb; border-color: #bac8ff; }
+    .tag.green { background: #ebfbee; color: #2f9e44; border-color: #b2f2bb; }
+    .tag.amber { background: #fff9db; color: #e67700; border-color: #ffec99; }
+    .tag.red { background: #fff5f5; color: #c92a2a; border-color: #ffc9c9; }
+    .note {
+      margin-top: 12px; padding: 10px 14px;
+      border-left: 2px solid #dee2e6; background: #f8f9fa;
+      font-size: 13px; color: #495057; line-height: 1.6;
+    }
+    .section-label {
+      font-size: 10px; font-weight: 600; letter-spacing: 0.06em;
+      color: #868e96; margin-bottom: 4px; margin-top: 10px;
+    }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0; }
+    .mini-card { padding: 10px 12px; border-radius: 8px; }
+    .mini-card.green { background: #ebfbee; }
+    .mini-card.amber { background: #fff9db; }
+    .mini-card .mc-label { font-size: 11px; font-weight: 600; margin-bottom: 5px; }
+    .mini-card.green .mc-label { color: #2f9e44; }
+    .mini-card.amber .mc-label { color: #e67700; }
+    .mini-card .mc-item { font-size: 12px; line-height: 1.4; margin-bottom: 3px; }
+    .mini-card.green .mc-item { color: #2f9e44; }
+    .mini-card.amber .mc-item { color: #e67700; }
+    .flag-block { margin-bottom: 8px; border-radius: 8px; overflow: hidden; border: 1px solid; }
+    .flag-block.red { border-color: #ffc9c9; }
+    .flag-block.amber { border-color: #ffec99; }
+    .flag-header {
+      padding: 10px 12px; cursor: pointer;
+      display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;
+    }
+    .flag-header.red { background: #fff5f5; }
+    .flag-header.amber { background: #fff9db; }
+    .flag-name { font-size: 11px; font-weight: 600; margin-bottom: 5px; }
+    .flag-name.red { color: #c92a2a; }
+    .flag-name.amber { color: #e67700; }
+    .flag-toggle { font-size: 11px; opacity: 0.7; flex-shrink: 0; margin-top: 2px; }
+    .flag-detail { padding: 12px 14px; background: #fff; border-top: 1px solid #f1f3f5; display: none; }
+    .flag-detail.open { display: block; }
+    .detail-label { font-size: 10px; font-weight: 600; letter-spacing: 0.06em; color: #868e96; margin-bottom: 3px; margin-top: 10px; }
+    .detail-label:first-child { margin-top: 0; }
+    .detail-text { font-size: 13px; line-height: 1.6; color: #1a1a1a; }
+    .verdict-box {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      margin-bottom: 14px; gap: 10px;
+    }
+    .verdict-label { font-size: 11px; font-weight: 600; color: #868e96; letter-spacing: 0.04em; margin-bottom: 4px; }
+    .verdict-title { font-size: 16px; font-weight: 500; line-height: 1.4; }
+    .badge {
+      flex-shrink: 0; padding: 6px 14px; border-radius: 8px;
+      font-size: 12px; font-weight: 600; border: 1px solid;
+    }
+    .badge.green { background: #ebfbee; color: #2f9e44; border-color: #b2f2bb; }
+    .badge.red { background: #fff5f5; color: #c92a2a; border-color: #ffc9c9; }
+    .ms-april-box { padding: 12px 14px; border-left: 2px solid #dee2e6; background: #f8f9fa; margin-top: 8px; }
+    .ms-april-label { font-size: 10px; font-weight: 700; letter-spacing: 0.07em; color: #868e96; margin-bottom: 6px; }
+    .ms-april-text { font-size: 14px; line-height: 1.7; color: #1a1a1a; }
+    .error-box {
+      margin-top: 12px; padding: 12px 14px; border-radius: 8px;
+      background: #fff5f5; color: #c92a2a; font-size: 13px; border: 1px solid #ffc9c9;
+    }
+    .loading { text-align: center; padding: 2rem 0; color: #868e96; font-size: 13px; }
+    .disclaimer {
+      margin-top: 2rem; padding: 12px 16px;
+      background: #f1f3f5; border-radius: 8px; border: 1px solid #dee2e6;
+      font-size: 12px; color: #868e96; line-height: 1.5; text-align: center;
+    }
+    .disclaimer strong { color: #495057; }
+    #results { display: none; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Crown Decode™</h1>
+  <p class="sub">Analyze any hair product ingredient list. Take a photo of the label or paste the ingredients manually — Ms. April's Three Pass Method does the rest.</p>
+
+  <div id="inputArea">
+    <!-- Tab buttons -->
+    <div class="input-tabs">
+      <button class="tab-btn active" onclick="switchTab('camera')" id="tab-camera">📷 Take / Upload Photo</button>
+      <button class="tab-btn" onclick="switchTab('manual')" id="tab-manual">✏️ Paste Manually</button>
+    </div>
+
+    <!-- Camera / Upload section -->
+    <div class="camera-section visible" id="camera-section">
+      <div class="upload-area" onclick="document.getElementById('imageInput').click()">
+        <div class="upload-icon">📸</div>
+        <div class="upload-label">Tap to take a photo or upload an image</div>
+        <div class="upload-hint">Point your camera at the ingredient list on the back of the bottle</div>
+      </div>
+      <input type="file" id="imageInput" accept="image/*" capture="environment" onchange="handleImage(event)"/>
+      <img id="previewImg" class="preview-img" alt="Label preview"/>
+      <div class="extracted-box" id="extractedBox">
+        <div class="extracted-label">INGREDIENTS READ FROM PHOTO — REVIEW BEFORE ANALYZING</div>
+        <textarea class="extracted-text" id="extractedText" placeholder="Extracted ingredients will appear here..."></textarea>
+        <button onclick="runAnalysis(document.getElementById('extractedText').value)" id="analyzeFromPhoto">Run Three Pass Analysis ↗</button>
+      </div>
+    </div>
+
+    <!-- Manual paste section -->
+    <div class="manual-section" id="manual-section">
+      <textarea id="manualText" placeholder="Paste ingredient list here...&#10;&#10;Example: Water, Glycerin, Cetyl Alcohol, Shea Butter, Behentrimonium Methosulfate, Phenoxyethanol, Fragrance..."></textarea>
+      <button onclick="runAnalysis(document.getElementById('manualText').value)" id="analyzeFromText">Run Three Pass Analysis ↗</button>
+    </div>
+
+    <div class="error-box" id="errorBox" style="display:none;"></div>
+    <div class="loading" id="loadingMsg" style="display:none;"></div>
+
+    <div class="disclaimer">
+      <strong>For educational purposes only.</strong> Crown Decode™ is a learning tool, not a substitute for professional advice. Always cross-reference with a licensed cosmetologist before making decisions about your hair care routine.
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div id="results">
+    <div id="pass1" class="card"></div>
+    <div id="pass2" class="card"></div>
+    <div id="pass3" class="card"></div>
+    <div id="final" class="card"></div>
+    <button class="secondary" onclick="resetApp()">← Analyze another product</button>
+    <div class="disclaimer">
+      <strong>For educational purposes only.</strong> Crown Decode™ is a learning tool, not a substitute for professional advice. Always cross-reference with a licensed cosmetologist before making decisions about your hair care routine.
+    </div>
+  </div>
+</div>
+
+<script>
+  function switchTab(tab) {
+    document.getElementById('camera-section').classList.toggle('visible', tab === 'camera');
+    document.getElementById('manual-section').classList.toggle('visible', tab === 'manual');
+    document.getElementById('tab-camera').classList.toggle('active', tab === 'camera');
+    document.getElementById('tab-manual').classList.toggle('active', tab === 'manual');
+  }
+
+  function showError(msg) {
+    const b = document.getElementById('errorBox');
+    b.textContent = msg; b.style.display = 'block';
+  }
+
+  function clearError() {
+    document.getElementById('errorBox').style.display = 'none';
+  }
+
+  function setLoading(msg) {
+    const l = document.getElementById('loadingMsg');
+    if (msg) { l.textContent = msg; l.style.display = 'block'; }
+    else { l.style.display = 'none'; }
+  }
+
+  async function handleImage(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    clearError();
+
+    // Show preview
+    const preview = document.getElementById('previewImg');
+    preview.src = URL.createObjectURL(file);
+    preview.style.display = 'block';
+
+    // Convert to base64
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+      const dataUrl = e.target.result;
+      const base64 = dataUrl.split(',')[1];
+      const mediaType = file.type || 'image/jpeg';
+
+      setLoading('Reading the label...');
+      document.getElementById('extractedBox').style.display = 'none';
+
+      try {
+        const res = await fetch('/api/extract-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ imageBase64: base64, mediaType })
+        });
+        const data = await res.json();
+        setLoading('');
+
+        if (data.error) { showError(data.error); return; }
+        if (!data.ingredients || data.ingredients.trim() === 'UNCLEAR') {
+          showError('The photo was not clear enough to read. Try better lighting or a closer shot — or paste the ingredients manually.');
+          return;
+        }
+
+        document.getElementById('extractedText').value = data.ingredients;
+        document.getElementById('extractedBox').style.display = 'block';
+      } catch (err) {
+        setLoading('');
+        showError('Something went wrong reading the image. Try again or paste manually.');
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function runAnalysis(ingredients) {
+    if (!ingredients || !ingredients.trim()) {
+      showError('No ingredients to analyze. Paste a list or take a photo first.');
+      return;
+    }
+    clearError();
+    setLoading('Flipping the bottle over...');
+
+    try {
+      const res = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ingredients })
+      });
+      const data = await res.json();
+      setLoading('');
+
+      if (data.error) { showError(data.error); return; }
+
+      const rawText = data.content?.[0]?.text || '';
+      const clean = rawText.replace(/```json|```/g, '').trim();
+      let parsed;
+      try { parsed = JSON.parse(clean); }
+      catch { showError('Could not read the analysis. Try again.'); return; }
+
+      if (parsed.error) { showError(parsed.error); return; }
+
+      renderResults(parsed);
+    } catch (err) {
+      setLoading('');
+      showError('Something went wrong. Try again.');
+    }
+  }
+
+  function tag(text, color) {
+    return `<span class="tag${color ? ' ' + color : ''}">${text}</span>`;
+  }
+
+  function flagBlock(title, items, position, whatItIs, whatItMeansForYourHair, whatToWatch, context, color) {
+    if (!items || items.length === 0) return '';
+    const id = 'flag-' + Math.random().toString(36).slice(2);
+    const posText = position && position !== 'none' ? ` — ${position} on list` : '';
+    const tags = items.map(i => tag(i, color)).join('');
+    const hasDetail = whatItIs || whatItMeansForYourHair || whatToWatch || context;
+    const detail = hasDetail ? `
+      <div class="flag-detail" id="${id}">
+        ${whatItIs ? `<div class="detail-label">WHAT IT IS</div><div class="detail-text">${whatItIs}</div>` : ''}
+        ${whatItMeansForYourHair ? `<div class="detail-label">WHAT IT MEANS FOR YOUR HAIR</div><div class="detail-text">${whatItMeansForYourHair}</div>` : ''}
+        ${whatToWatch ? `<div class="detail-label">WHAT TO WATCH FOR</div><div class="detail-text">${whatToWatch}</div>` : ''}
+        ${context ? `<div class="detail-label">CONTEXT IN THIS FORMULA</div><div class="detail-text">${context}</div>` : ''}
+      </div>` : '';
+    return `
+      <div class="flag-block ${color}">
+        <div class="flag-header ${color}" onclick="toggleFlag('${id}', this)">
+          <div>
+            <div class="flag-name ${color}">${title}${posText}</div>
+            <div>${tags}</div>
+          </div>
+          ${hasDetail ? `<span class="flag-toggle ${color}">▼ more</span>` : ''}
+        </div>
+        ${detail}
+      </div>`;
+  }
+
+  function toggleFlag(id, header) {
+    const detail = document.getElementById(id);
+    if (!detail) return;
+    const toggle = header.querySelector('.flag-toggle');
+    detail.classList.toggle('open');
+    if (toggle) toggle.textContent = detail.classList.contains('open') ? '▲ less' : '▼ more';
+  }
+
+  function renderResults(r) {
+    document.getElementById('inputArea').style.display = 'none';
+    document.getElementById('results').style.display = 'block';
+
+    // Pass 1
+    const p1 = r.pass1 || {};
+    const top5 = (p1.top5 || []).map((ing, i) =>
+      `<span style="display:inline-flex;align-items:center;gap:3px;margin:2px 4px 2px 0">
+        <span style="font-size:10px;color:#3b5bdb;font-weight:600">${i+1}</span>${tag(ing)}
+      </span>`).join('');
+    const mc = p1.moistureCheck || {};
+    document.getElementById('pass1').innerHTML = `
+      <div class="pass-label"><div class="pass-num blue">1</div><span class="pass-title">The Headline — what is this product?</span></div>
+      <p style="font-size:15px;font-weight:500;line-height:1.5;margin-bottom:12px">${p1.headline || ''}</p>
+      <div class="section-label">TOP 5 INGREDIENTS</div>
+      <div style="margin-bottom:10px">${top5}</div>
+      ${tag(p1.dominantType || '', 'blue')}
+      ${mc.pass !== undefined ? tag(mc.pass ? '✓ moisture source in top 3' : '⚠ no moisture source in top 3', mc.pass ? 'green' : 'amber') : ''}
+      ${mc.note ? `<p style="font-size:12px;color:#868e96;margin-top:6px">${mc.note}</p>` : ''}
+      <div class="note">${p1.verdict || ''}</div>`;
+
+    // Pass 2
+    const p2 = r.pass2 || {};
+    const cats = p2.categories || {};
+    const catRows = [
+      ['MOISTURE / HYDRATION', cats.moisture],
+      ['SOFTENING / CONDITIONING', cats.softening],
+      ['SLIP / DETANGLING', cats.slip],
+      ['HOLD / DEFINITION', cats.hold],
+      ['SEALING / SHINE', cats.sealing]
+    ].map(([label, items]) => `
+      <div style="margin-bottom:10px">
+        <div class="section-label">${label}</div>
+        ${items && items.length > 0 ? items.map(i => tag(i, 'green')).join('') : '<span style="font-size:12px;color:#adb5bd;font-style:italic">none found</span>'}
+      </div>`).join('');
+    document.getElementById('pass2').innerHTML = `
+      <div class="pass-label"><div class="pass-num green">2</div><span class="pass-title">The Function — what does it DO?</span></div>
+      ${catRows}
+      <div class="note">${p2.verdict || ''}</div>`;
+
+    // Pass 3
+    const p3 = r.pass3 || {};
+    const flagCount = p3.redFlagCount || 0;
+    const da = p3.dryingAlcohols || {};
+    const ho = p3.heavyOcclusives || {};
+    const pr = p3.proteins || {};
+    const fr = p3.fragrance || {};
+    const ha = p3.harmful || {};
+    const md = p3.marketingDust || {};
+    const si = p3.silicones || {};
+    document.getElementById('pass3').innerHTML = `
+      <div class="pass-label"><div class="pass-num amber">3</div><span class="pass-title">The Red Flags</span></div>
+      ${flagCount > 0 ? tag(`${flagCount} flag${flagCount !== 1 ? 's' : ''} found`, flagCount >= 3 ? 'red' : 'amber') : ''}
+      <div style="margin-top:10px">
+        ${flagBlock('DRYING ALCOHOLS', da.found, da.position, da.whatItIs, da.whatItMeansForYourHair, da.whatToWatch, da.context, 'red')}
+        ${flagBlock('HEAVY OCCLUSIVES', ho.found, null, ho.whatItIs, ho.whatItMeansForYourHair, ho.whatToWatch, ho.context, 'amber')}
+        ${flagBlock('PROTEINS', pr.found, pr.position, pr.whatItIs, pr.whatItMeansForYourHair, pr.whatToWatch, pr.context, 'amber')}
+        ${flagBlock('FRAGRANCE / ESSENTIAL OILS', fr.found, null, fr.whatItIs, fr.whatItMeansForYourHair, fr.whatToWatch, fr.context, 'amber')}
+        ${flagBlock('HARMFUL INGREDIENTS', ha.found, null, ha.whatItIs, ha.whatItMeansForYourHair, ha.whatToWatch, ha.context, 'red')}
+        ${flagCount === 0 ? '<p style="font-size:13px;color:#2f9e44;margin-bottom:8px">No major red flags in this formula.</p>' : ''}
+      </div>
+      ${md.dustIngredients && md.dustIngredients.length > 0 ? `
+        <div style="padding:10px 12px;background:#f8f9fa;border-radius:8px;border:1px solid #dee2e6;margin-bottom:8px">
+          <div class="section-label">MARKETING DUST CHECK</div>
+          ${md.preservative ? `<p style="font-size:12px;color:#495057;margin-bottom:5px">Preservative cutoff: <strong>${md.preservative}</strong></p>` : ''}
+          <div style="margin-bottom:4px">${(md.dustIngredients || []).map(i => tag(i)).join('')}</div>
+          <p style="font-size:12px;color:#868e96;font-style:italic">${md.verdict || ''}</p>
+        </div>` : ''}
+      ${(si.waterSoluble?.length || si.nonSoluble?.length || si.evaporating?.length) ? `
+        <div style="padding:10px 12px;background:#f8f9fa;border-radius:8px;border:1px solid #dee2e6;margin-bottom:8px">
+          <div class="section-label">SILICONE BREAKDOWN</div>
+          ${si.waterSoluble?.length ? `<div style="margin-bottom:4px"><span style="font-size:11px;color:#2f9e44;margin-right:4px">water-soluble:</span>${si.waterSoluble.map(i => tag(i,'green')).join('')}</div>` : ''}
+          ${si.nonSoluble?.length ? `<div style="margin-bottom:4px"><span style="font-size:11px;color:#e67700;margin-right:4px">non-soluble (clarifying required):</span>${si.nonSoluble.map(i => tag(i,'amber')).join('')}</div>` : ''}
+          ${si.evaporating?.length ? `<div style="margin-bottom:4px"><span style="font-size:11px;color:#868e96;margin-right:4px">evaporating (no concern):</span>${si.evaporating.map(i => tag(i)).join('')}</div>` : ''}
+          ${si.verdict ? `<p style="font-size:12px;color:#868e96;font-style:italic;margin-top:4px">${si.verdict}</p>` : ''}
+        </div>` : ''}
+      <div class="note">${p3.verdict || ''}</div>`;
+
+    // Final
+    const f = r.final || {};
+    document.getElementById('final').innerHTML = `
+      <div class="verdict-box">
+        <div>
+          <div class="verdict-label">FINAL VERDICT</div>
+          <div class="verdict-title">${f.label || ''}</div>
+        </div>
+        <div class="badge ${f.putItBack ? 'red' : 'green'}">${f.putItBack ? 'Put it back' : 'Worth a try'}</div>
+      </div>
+      <div class="grid2">
+        <div class="mini-card green">
+          <div class="mc-label">STRENGTHS</div>
+          ${(f.strengths || []).map(s => `<div class="mc-item">+ ${s}</div>`).join('')}
+        </div>
+        <div class="mini-card amber">
+          <div class="mc-label">WATCH OUTS</div>
+          ${(f.watchOuts || []).map(w => `<div class="mc-item">! ${w}</div>`).join('')}
+        </div>
+      </div>
+      ${f.bestFor ? `<p style="font-size:12px;color:#868e96;margin-bottom:12px"><strong style="color:#1a1a1a">Best for: </strong>${f.bestFor}</p>` : ''}
+      ${f.putItBack && f.putItBackReason ? `<div style="padding:10px 12px;background:#fff5f5;border-radius:8px;font-size:13px;color:#c92a2a;margin-bottom:12px;line-height:1.5">${f.putItBackReason}</div>` : ''}
+      <div class="ms-april-box">
+        <div class="ms-april-label">MS. APRIL SAYS</div>
+        <div class="ms-april-text">${f.msAprilSays || ''}</div>
+      </div>`;
+  }
+
+  function resetApp() {
+    document.getElementById('inputArea').style.display = 'block';
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('manualText').value = '';
+    document.getElementById('extractedText').value = '';
+    document.getElementById('previewImg').style.display = 'none';
+    document.getElementById('extractedBox').style.display = 'none';
+    document.getElementById('imageInput').value = '';
+    clearError();
+    switchTab('camera');
+  }
+</script>
+</body>
+</html>
