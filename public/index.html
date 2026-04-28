@@ -304,15 +304,19 @@
       const data = await res.json();
       setLoading('');
 
-      if (data.error) { showError(data.error); return; }
+      if (data.error) {
+        const msg = typeof data.error === 'string' ? data.error : (data.error.message || JSON.stringify(data.error));
+        showError(msg); return;
+      }
 
       const rawText = data.content?.[0]?.text || '';
+      if (!rawText) { showError('Empty response. Try again.'); return; }
       const clean = rawText.replace(/```json|```/g, '').trim();
       let parsed;
       try { parsed = JSON.parse(clean); }
       catch { showError('Could not read the analysis. Try again.'); return; }
 
-      if (parsed.error) { showError(parsed.error); return; }
+      if (parsed.error) { showError(typeof parsed.error === 'string' ? parsed.error : (parsed.error.message || 'Unknown error')); return; }
 
       renderResults(parsed);
     } catch (err) {
