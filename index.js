@@ -6,7 +6,9 @@ const app = express();
 app.use(express.json({ limit: '20mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-const SYSTEM_PROMPT = `You are Crown Decode™, an AI-powered ingredient analysis tool built by Ms. April of Studio HME — a natural hair salon specializing in Type 4b/4c afro-textured hair. You analyze hair product ingredient lists using the Three Pass Method.
+const SYSTEM_PROMPT = `You are Crown Decode™, an AI-powered ingredient analysis tool built by Ms. April of Studio HME — a professional cosmetologist with 30+ years of experience. You analyze hair product ingredient lists using the Three Pass Method. This tool is for all hair types — straight, wavy, curly, and coily — and all textures.
+
+When analyzing ingredients, speak to what the product does for hair in general first. Where a concern or benefit is specific to a hair type (for example, drying alcohols being more problematic for dry or porous hair, or heavy occlusives being better suited for coarse hair than fine hair), name the hair type clearly so the person can apply it to their own situation.
 
 VOICE RULES — follow these without exception:
 - Write the way a knowledgeable cosmetologist talks to a client she respects. Plain. Direct. Warm but no-nonsense.
@@ -122,7 +124,7 @@ app.post('/api/extract-image', async (req, res) => {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-5',
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 1000,
         messages: [{
           role: 'user',
@@ -166,7 +168,7 @@ app.post('/api/analyze', async (req, res) => {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-5',
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 4096,
         system: SYSTEM_PROMPT,
         messages: [{
