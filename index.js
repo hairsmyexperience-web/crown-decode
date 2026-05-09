@@ -3,14 +3,62 @@ const fetch = require('node-fetch');
 const path = require('path');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
-const { Resend } = require('resend');
 
 const app = express();
 app.use(express.json({ limit: '20mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Resend setup for sending verification emails
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Helper: send email via Resend HTTP API directly (no SDK)
+async function sendVerificationEmail(toEmail, verifyUrl) {
+  const fromEmail = process.env.RESEND_FROM_EMAIL || 'Crown Decode <onboarding@resend.dev>';
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: #fafaf8; color: #1a1a1a; margin: 0; padding: 20px;">
+  <div style="max-width: 480px; margin: 0 auto; background: #fff; border: 1px solid #e8e8e8; border-radius: 10px; padding: 32px;">
+    <h1 style="font-size: 22px; font-weight: 600; margin: 0 0 12px 0;">One more step.</h1>
+    <p style="font-size: 14px; line-height: 1.6; margin: 0 0 16px 0; color: #495057;">
+      Click the button below to confirm your email and unlock unlimited Crown Decode analyses.
+    </p>
+    <p style="margin: 16px 0;">
+      <a href="${verifyUrl}" style="display: inline-block; background: #1a1a1a; color: #fff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500;">
+        Confirm my email
+      </a>
+    </p>
+    <p style="font-size: 12px; color: #868e96; line-height: 1.5; margin: 16px 0;">
+      Or copy and paste this link into your browser:<br>
+      <span style="word-break: break-all;">${verifyUrl}</span>
+    </p>
+    <div style="font-size: 12px; color: #868e96; margin-top: 24px; padding-top: 16px; border-top: 1px solid #e8e8e8; line-height: 1.6;">
+      This link expires in 24 hours. If you didn't request this, you can ignore this email — nothing will happen.<br><br>
+      — Ms. April<br>Studio HME
+    </div>
+  </div>
+</body>
+</html>`;
+
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      from: fromEmail,
+      to: toEmail,
+      subject: 'Unlock Crown Decode — confirm your email',
+      html
+    })
+  });
+
+  if (!response.ok) {
+    const errData = await response.json().catch(() => ({}));
+    throw new Error(errData.message || `Resend API returned ${response.status}`);
+  }
+  return await response.json();
+}
 
 // Helper: add an email to Mailchimp with the crown-decode tag
 async function addToMailchimp(email) {
@@ -248,39 +296,7 @@ app.post('/api/send-verification', async (req, res) => {
     );
 
     const verifyUrl = `${process.env.BASE_URL}/verify?token=${token}`;
-
-    await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL || 'Crown Decode <onboarding@resend.dev>',
-      to: email,
-      subject: 'Unlock Crown Decode — confirm your email',
-      html: `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-</head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: #fafaf8; color: #1a1a1a; margin: 0; padding: 20px;">
-  <div style="max-width: 480px; margin: 0 auto; background: #fff; border: 1px solid #e8e8e8; border-radius: 10px; padding: 32px;">
-    <h1 style="font-size: 22px; font-weight: 600; margin: 0 0 12px 0;">One more step.</h1>
-    <p style="font-size: 14px; line-height: 1.6; margin: 0 0 16px 0; color: #495057;">
-      Click the button below to confirm your email and unlock unlimited Crown Decode analyses.
-    </p>
-    <p style="margin: 16px 0;">
-      <a href="${verifyUrl}" style="display: inline-block; background: #1a1a1a; color: #fff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500;">
-        Confirm my email
-      </a>
-    </p>
-    <p style="font-size: 12px; color: #868e96; line-height: 1.5; margin: 16px 0;">
-      Or copy and paste this link into your browser:<br>
-      <span style="word-break: break-all;">${verifyUrl}</span>
-    </p>
-    <div style="font-size: 12px; color: #868e96; margin-top: 24px; padding-top: 16px; border-top: 1px solid #e8e8e8; line-height: 1.6;">
-      This link expires in 24 hours. If you didn't request this, you can ignore this email — nothing will happen.<br><br>
-      — Ms. April<br>Studio HME
-    </div>
-  </div>
-</body>
-</html>`
-    });
+    await sendVerificationEmail(email, verifyUrl);
 
     res.json({ success: true });
   } catch (err) {
