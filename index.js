@@ -1,10 +1,57 @@
 const express = require('express');
 const fetch = require('node-fetch');
 const path = require('path');
+const crypto = require('crypto');
+const jwt = require('jsonwebtoken');
+const { Resend } = require('resend');
 
 const app = express();
 app.use(express.json({ limit: '20mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Resend setup for sending verification emails
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+// Helper: add an email to Mailchimp with the crown-decode tag
+async function addToMailchimp(email) {
+  const dc = process.env.MAILCHIMP_DC;
+  const apiKey = process.env.MAILCHIMP_API_KEY;
+  const audienceId = process.env.MAILCHIMP_AUDIENCE_ID;
+  const auth = 'Basic ' + Buffer.from('anystring:' + apiKey).toString('base64');
+
+  const url = `https://${dc}.api.mailchimp.com/3.0/lists/${audienceId}/members`;
+  const body = {
+    email_address: email,
+    status: 'subscribed',
+    tags: ['crown-decode']
+  };
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Authorization': auth, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+
+  if (response.ok) return { ok: true, existing: false };
+
+  const errData = await response.json();
+  // Already a member? Just add the crown-decode tag to them.
+  if (errData.title === 'Member Exists') {
+    const subscriberHash = crypto.createHash('md5').update(email.toLowerCase()).digest('hex');
+    const tagsUrl = `https://${dc}.api.mailchimp.com/3.0/lists/${audienceId}/members/${subscriberHash}/tags`;
+    const tagResponse = await fetch(tagsUrl, {
+      method: 'POST',
+      headers: { 'Authorization': auth, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tags: [{ name: 'crown-decode', status: 'active' }] })
+    });
+    if (!tagResponse.ok) {
+      const tagErr = await tagResponse.json();
+      throw new Error(tagErr.detail || 'Failed to tag existing member');
+    }
+    return { ok: true, existing: true };
+  }
+  throw new Error(errData.detail || 'Failed to add to Mailchimp');
+}
 
 const SYSTEM_PROMPT = `You are Crown Decode™, an AI-powered ingredient analysis tool built by Ms. April of Studio HME — a professional cosmetologist with 30+ years of experience. You analyze hair product ingredient lists using the Three Pass Method. This tool is for all hair types — straight, wavy, curly, and coily — and all textures.
 
@@ -184,6 +231,149 @@ app.post('/api/analyze', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// Route 3 (NEW): Send the magic-link verification email
+app.post('/api/send-verification', async (req, res) => {
+  const { email } = req.body;
+
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ error: 'Please enter a valid email address.' });
+  }
+
+  try {
+    const token = jwt.sign(
+      { email: email.toLowerCase() },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    const verifyUrl = `${process.env.BASE_URL}/verify?token=${token}`;
+
+    await resend.emails.send({
+      from: process.env.RESEND_FROM_EMAIL || 'Crown Decode <onboarding@resend.dev>',
+      to: email,
+      subject: 'Unlock Crown Decode — confirm your email',
+      html: `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: #fafaf8; color: #1a1a1a; margin: 0; padding: 20px;">
+  <div style="max-width: 480px; margin: 0 auto; background: #fff; border: 1px solid #e8e8e8; border-radius: 10px; padding: 32px;">
+    <h1 style="font-size: 22px; font-weight: 600; margin: 0 0 12px 0;">One more step.</h1>
+    <p style="font-size: 14px; line-height: 1.6; margin: 0 0 16px 0; color: #495057;">
+      Click the button below to confirm your email and unlock unlimited Crown Decode analyses.
+    </p>
+    <p style="margin: 16px 0;">
+      <a href="${verifyUrl}" style="display: inline-block; background: #1a1a1a; color: #fff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500;">
+        Confirm my email
+      </a>
+    </p>
+    <p style="font-size: 12px; color: #868e96; line-height: 1.5; margin: 16px 0;">
+      Or copy and paste this link into your browser:<br>
+      <span style="word-break: break-all;">${verifyUrl}</span>
+    </p>
+    <div style="font-size: 12px; color: #868e96; margin-top: 24px; padding-top: 16px; border-top: 1px solid #e8e8e8; line-height: 1.6;">
+      This link expires in 24 hours. If you didn't request this, you can ignore this email — nothing will happen.<br><br>
+      — Ms. April<br>Studio HME
+    </div>
+  </div>
+</body>
+</html>`
+    });
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Verification email error:', err);
+    res.status(500).json({ error: 'Could not send verification email. Please try again.' });
+  }
+});
+
+// Route 4 (NEW): Handle the magic link click
+app.get('/verify', async (req, res) => {
+  const { token } = req.query;
+
+  if (!token) {
+    return res.status(400).send(verificationErrorPage('Missing verification token. Please request a new link.'));
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const email = decoded.email;
+    await addToMailchimp(email);
+    res.send(verificationSuccessPage(email));
+  } catch (err) {
+    if (err.name === 'TokenExpiredError') {
+      return res.status(400).send(verificationErrorPage('This link has expired. Please request a new one.'));
+    }
+    console.error('Verification error:', err);
+    res.status(400).send(verificationErrorPage('This verification link is not valid. Please request a new one.'));
+  }
+});
+
+function verificationSuccessPage(email) {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Crown Decode™ — You're In</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #fafaf8; color: #1a1a1a; padding: 1.5rem 1rem; margin: 0; }
+    .wrap { max-width: 520px; margin: 4rem auto; text-align: center; }
+    .card { background: #fff; border: 1px solid #e8e8e8; border-radius: 10px; padding: 2.5rem 1.5rem; }
+    .check { font-size: 3rem; margin-bottom: 1rem; }
+    h1 { font-size: 22px; font-weight: 600; margin: 0 0 8px 0; }
+    p { font-size: 14px; line-height: 1.6; color: #495057; margin: 0 0 1rem 0; }
+    .button { display: inline-block; background: #1a1a1a; color: #fff !important; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500; margin-top: 1rem; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="check">✓</div>
+      <h1>You're in.</h1>
+      <p>Your email has been verified. Crown Decode is unlocked for unlimited analyses.</p>
+      <p style="color: #868e96; font-size: 13px;">Watch your inbox over the next two weeks — Ms. April has a five-email series coming with the framework behind every decode.</p>
+      <a href="/" class="button">Decode another product</a>
+    </div>
+  </div>
+  <script>
+    try { localStorage.setItem('crownDecode_verified', 'true'); } catch(e) {}
+  </script>
+</body>
+</html>`;
+}
+
+function verificationErrorPage(message) {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Crown Decode™ — Verification Issue</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #fafaf8; color: #1a1a1a; padding: 1.5rem 1rem; margin: 0; }
+    .wrap { max-width: 520px; margin: 4rem auto; text-align: center; }
+    .card { background: #fff; border: 1px solid #e8e8e8; border-radius: 10px; padding: 2.5rem 1.5rem; }
+    .icon { font-size: 3rem; margin-bottom: 1rem; }
+    h1 { font-size: 22px; font-weight: 600; margin: 0 0 8px 0; }
+    p { font-size: 14px; line-height: 1.6; color: #495057; margin: 0 0 1rem 0; }
+    .button { display: inline-block; background: #1a1a1a; color: #fff !important; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500; margin-top: 1rem; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="icon">⚠</div>
+      <h1>That didn't work.</h1>
+      <p>${message}</p>
+      <a href="/" class="button">Back to Crown Decode</a>
+    </div>
+  </div>
+</body>
+</html>`;
+}
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Crown Decode running on port ${PORT}`));
