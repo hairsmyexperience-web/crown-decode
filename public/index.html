@@ -172,6 +172,25 @@
     }
     .disclaimer strong { color: #495057; }
     #results { display: none; }
+
+    /* Email gate modal */
+    .email-gate-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;
+      z-index: 1000; padding: 1rem;
+    }
+    .email-gate-modal {
+      background: #fff; border-radius: 12px; padding: 2rem 1.5rem;
+      max-width: 460px; width: 100%; box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    }
+    .email-gate-modal h2 { font-size: 20px; font-weight: 600; margin-bottom: 12px; line-height: 1.3; }
+    .email-gate-modal p { font-size: 14px; line-height: 1.6; color: #495057; margin-bottom: 14px; }
+    .email-gate-modal input[type="email"] {
+      width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;
+      font-size: 14px; font-family: inherit; margin-bottom: 8px;
+    }
+    .email-gate-modal input[type="email"]:focus { outline: 2px solid #1a1a1a; border-color: transparent; }
+    .gate-fine-print { font-size: 11px; color: #868e96; margin-top: 8px; line-height: 1.5; }
   </style>
 </head>
 <body>
@@ -227,9 +246,100 @@
       <strong>For educational purposes only.</strong> Crown Decode™ is a learning tool, not a substitute for professional advice. Always cross-reference with a licensed cosmetologist before making decisions about your hair care routine.
     </div>
   </div>
+
+  <!-- Email gate modal -->
+  <div class="email-gate-overlay" id="emailGate" style="display:none;">
+    <div class="email-gate-modal">
+      <div id="gateForm">
+        <h2>Loved that decode?</h2>
+        <p>Drop your email and I'll send you a link to unlock unlimited analyses — plus a 5-part series on what your products are really doing for your hair.</p>
+        <input type="email" id="gateEmailInput" placeholder="your@email.com" onkeydown="if(event.key==='Enter') submitEmailGate()"/>
+        <button id="gateSubmit" onclick="submitEmailGate()">Unlock unlimited</button>
+        <button class="secondary" onclick="hideEmailGate()" style="margin-top:6px;">Not right now</button>
+        <p class="gate-fine-print">No spam. Just the framework. Unsubscribe anytime.</p>
+      </div>
+      <div id="gateWaiting" style="display:none;">
+        <h2>Check your inbox.</h2>
+        <p>I just sent a confirmation link to <strong id="gateSentEmail"></strong>.</p>
+        <p>Click the button in that email to unlock Crown Decode for unlimited analyses. The link should arrive in about 30 seconds. If you don't see it, check your spam folder.</p>
+        <button class="secondary" onclick="hideEmailGate()">Close</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
+  // ===== GATE STATE MANAGEMENT =====
+  function getUsageCount() {
+    try { return parseInt(localStorage.getItem('crownDecode_usageCount') || '0', 10); }
+    catch(e) { return 0; }
+  }
+  function incrementUsageCount() {
+    try { localStorage.setItem('crownDecode_usageCount', (getUsageCount() + 1).toString()); }
+    catch(e) {}
+  }
+  function isVerified() {
+    try { return localStorage.getItem('crownDecode_verified') === 'true'; }
+    catch(e) { return false; }
+  }
+  function shouldShowGate() {
+    return getUsageCount() >= 1 && !isVerified();
+  }
+
+  // ===== EMAIL GATE MODAL =====
+  let pendingIngredients = '';
+
+  function showEmailGate(ingredients) {
+    pendingIngredients = ingredients || '';
+    document.getElementById('emailGate').style.display = 'flex';
+    document.getElementById('gateForm').style.display = 'block';
+    document.getElementById('gateWaiting').style.display = 'none';
+    document.getElementById('gateEmailInput').value = '';
+    setTimeout(() => document.getElementById('gateEmailInput').focus(), 100);
+  }
+
+  function hideEmailGate() {
+    document.getElementById('emailGate').style.display = 'none';
+  }
+
+  async function submitEmailGate() {
+    const emailInput = document.getElementById('gateEmailInput');
+    const email = emailInput.value.trim();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      alert('Please enter a valid email address.');
+      return;
+    }
+    const submitBtn = document.getElementById('gateSubmit');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending...';
+
+    try {
+      const res = await fetch('/api/send-verification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      const data = await res.json();
+
+      if (data.error) {
+        alert(data.error);
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Unlock unlimited';
+        return;
+      }
+
+      // Show waiting state
+      document.getElementById('gateForm').style.display = 'none';
+      document.getElementById('gateWaiting').style.display = 'block';
+      document.getElementById('gateSentEmail').textContent = email;
+    } catch (err) {
+      alert('Could not send the verification email. Please try again.');
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Unlock unlimited';
+    }
+  }
+
+  // ===== TAB SWITCHING =====
   function switchTab(tab) {
     document.getElementById('camera-section').classList.toggle('visible', tab === 'camera');
     document.getElementById('manual-section').classList.toggle('visible', tab === 'manual');
@@ -237,6 +347,7 @@
     document.getElementById('tab-manual').classList.toggle('active', tab === 'manual');
   }
 
+  // ===== ERROR / LOADING =====
   function showError(msg) {
     const b = document.getElementById('errorBox');
     b.textContent = msg; b.style.display = 'block';
@@ -252,17 +363,16 @@
     else { l.style.display = 'none'; }
   }
 
+  // ===== IMAGE EXTRACTION =====
   async function handleImage(event) {
     const file = event.target.files[0];
     if (!file) return;
     clearError();
 
-    // Show preview
     const preview = document.getElementById('previewImg');
     preview.src = URL.createObjectURL(file);
     preview.style.display = 'block';
 
-    // Convert to base64
     const reader = new FileReader();
     reader.onload = async function(e) {
       const dataUrl = e.target.result;
@@ -297,12 +407,20 @@
     reader.readAsDataURL(file);
   }
 
+  // ===== ANALYSIS WITH GATE =====
   async function runAnalysis(ingredients) {
     if (!ingredients || !ingredients.trim()) {
       showError('No ingredients to analyze. Paste a list or take a photo first.');
       return;
     }
     clearError();
+
+    // Gate check: if user has used their free decode and isn't verified, show modal
+    if (shouldShowGate()) {
+      showEmailGate(ingredients);
+      return;
+    }
+
     setLoading('Flipping the bottle over...');
 
     try {
@@ -328,6 +446,7 @@
 
       if (parsed.error) { showError(typeof parsed.error === 'string' ? parsed.error : (parsed.error.message || 'Unknown error')); return; }
 
+      incrementUsageCount();
       renderResults(parsed);
     } catch (err) {
       setLoading('');
@@ -335,6 +454,7 @@
     }
   }
 
+  // ===== RENDER HELPERS (unchanged from original) =====
   function tag(text, color) {
     return `<span class="tag${color ? ' ' + color : ''}">${text}</span>`;
   }
