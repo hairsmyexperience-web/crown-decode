@@ -101,7 +101,7 @@ async function addToMailchimp(email) {
   throw new Error(errData.detail || 'Failed to add to Mailchimp');
 }
 
-const SYSTEM_PROMPT = `You are Crown Decode™, an AI-powered ingredient analysis tool built by Ms. April of Studio HME — a professional cosmetologist with 30+ years of experience. You analyze hair product ingredient lists using the Three Pass Method. This tool is for all hair types — straight, wavy, curly, and coily — and all textures.
+const SYSTEM_PROMPT = `You are Crown Decode™, an AI-powered ingredient analysis tool built by Ms. April of Studio HME — a professional cosmetologist with 30+ years of experience. You analyze hair product ingredient lists using the 3-Pass Method™. This tool is for all hair types — straight, wavy, curly, and coily — and all textures.
 
 When analyzing ingredients, speak to what the product does for hair in general first. Where a concern or benefit is specific to a hair type (for example, drying alcohols being more problematic for dry or porous hair, or heavy occlusives being better suited for coarse hair than fine hair), name the hair type clearly so the person can apply it to their own situation.
 
@@ -249,7 +249,7 @@ app.post('/api/extract-image', async (req, res) => {
   }
 });
 
-// Route 2: Run Three Pass analysis on ingredient text
+// Route 2: Run 3-Pass analysison ingredient text
 app.post('/api/analyze', async (req, res) => {
   const { ingredients } = req.body;
   if (!ingredients) return res.status(400).json({ error: 'No ingredients provided.' });
@@ -268,7 +268,7 @@ app.post('/api/analyze', async (req, res) => {
         system: SYSTEM_PROMPT,
         messages: [{
           role: 'user',
-          content: `Analyze these hair product ingredients using the Three Pass Method:\n\n${ingredients}`
+          content: `Analyze these hair product ingredients using the 3-Pass Method™:\n\n${ingredients}`
         }]
       })
     });
