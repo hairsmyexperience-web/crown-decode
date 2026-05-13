@@ -196,7 +196,7 @@
 <body>
 <div class="wrap">
   <h1>Crown Decode™</h1>
-  <p class="sub">Analyze any hair product ingredient list. Take a photo of the label or paste the ingredients manually — Ms. April's Three Pass Method does the rest.</p>
+  <p class="sub">Analyze any hair product ingredient list. Take a photo of the label or paste the ingredients manually — Ms. April's 3-Pass Method™ does the rest.</p>
 
   <div id="inputArea">
     <!-- Tab buttons -->
@@ -217,14 +217,14 @@
       <div class="extracted-box" id="extractedBox">
         <div class="extracted-label">INGREDIENTS READ FROM PHOTO — REVIEW BEFORE ANALYZING</div>
         <textarea class="extracted-text" id="extractedText" placeholder="Extracted ingredients will appear here..."></textarea>
-        <button onclick="runAnalysis(document.getElementById('extractedText').value)" id="analyzeFromPhoto">Run Three Pass Analysis ↗</button>
+        <button onclick="runAnalysis(document.getElementById('extractedText').value)" id="analyzeFromPhoto">Run 3-Pass Analysis ↗</button>
       </div>
     </div>
 
     <!-- Manual paste section -->
     <div class="manual-section" id="manual-section">
       <textarea id="manualText" placeholder="Paste ingredient list here...&#10;&#10;Example: Water, Glycerin, Cetyl Alcohol, Shea Butter, Behentrimonium Methosulfate, Phenoxyethanol, Fragrance..."></textarea>
-      <button onclick="runAnalysis(document.getElementById('manualText').value)" id="analyzeFromText">Run Three Pass Analysis ↗</button>
+      <button onclick="runAnalysis(document.getElementById('manualText').value)" id="analyzeFromText">Run 3-Pass Analysis ↗</button>
     </div>
 
     <div class="error-box" id="errorBox" style="display:none;"></div>
