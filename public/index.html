@@ -15,7 +15,29 @@
     h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
     .sub { font-size: 13px; color: #666; margin-bottom: 1.25rem; line-height: 1.5; }
 
-    /* Input methods */
+    /* Product type selector */
+    .product-select-label {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.06em;
+      color: #868e96; margin-bottom: 8px; display: block;
+    }
+    .product-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 8px; margin-bottom: 16px;
+    }
+    .product-btn {
+      padding: 10px 12px; border: 1.5px solid #ddd; border-radius: 8px;
+      background: #fff; font-size: 13px; cursor: pointer;
+      text-align: left; color: #495057; transition: all 0.15s;
+      line-height: 1.4;
+    }
+    .product-btn:hover { border-color: #999; }
+    .product-btn.selected {
+      border-color: #1a1a1a; background: #1a1a1a;
+      color: #fff; font-weight: 500;
+    }
+    .product-btn .btn-icon { font-size: 16px; display: block; margin-bottom: 3px; }
+
+    /* Input tabs */
     .input-tabs { display: flex; gap: 8px; margin-bottom: 12px; }
     .tab-btn {
       flex: 1; padding: 10px; border: 1.5px solid #ddd; border-radius: 8px;
@@ -23,6 +45,14 @@
       color: #666; transition: all 0.15s;
     }
     .tab-btn.active { border-color: #1a1a1a; color: #1a1a1a; background: #f8f9fa; }
+
+    /* Photo tips */
+    .photo-tips {
+      background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px;
+      padding: 10px 12px; margin-bottom: 10px; font-size: 12px;
+      color: #495057; line-height: 1.6;
+    }
+    .photo-tips strong { display: block; margin-bottom: 4px; color: #1a1a1a; font-size: 11px; letter-spacing: 0.05em; }
 
     /* Camera section */
     .camera-section { display: none; }
@@ -41,6 +71,25 @@
       width: 100%; border-radius: 8px; margin-top: 12px;
       border: 1px solid #dee2e6; display: none;
     }
+
+    /* Readability feedback */
+    .read-status { margin-top: 12px; border-radius: 8px; padding: 12px 14px; display: none; }
+    .read-status.green {
+      background: #ebfbee; border: 1.5px solid #b2f2bb; color: #2f9e44;
+    }
+    .read-status.yellow {
+      background: #fff9db; border: 1.5px solid #ffec99; color: #e67700;
+    }
+    .read-status.red {
+      background: #fff5f5; border: 2px solid #ffc9c9; color: #c92a2a;
+    }
+    .read-status-title {
+      font-size: 13px; font-weight: 600; margin-bottom: 6px;
+    }
+    .read-status-body { font-size: 13px; line-height: 1.6; }
+    .read-status-body ul { padding-left: 16px; margin-top: 6px; }
+    .read-status-body li { margin-bottom: 3px; }
+
     .extracted-box { margin-top: 12px; display: none; }
     .extracted-label { font-size: 11px; font-weight: 600; color: #868e96; letter-spacing: 0.05em; margin-bottom: 6px; }
     .extracted-text {
@@ -69,9 +118,25 @@
       background: transparent; color: #1a1a1a;
       border: 1.5px solid #ddd; margin-top: 8px;
     }
-    button.outline {
-      background: transparent; color: #1a1a1a;
-      border: 1.5px solid #1a1a1a; margin-top: 8px;
+
+    /* Loading */
+    .loading {
+      display: none; text-align: center; padding: 1.25rem;
+      color: #1a1a1a; font-size: 15px; font-weight: 500;
+      background: #fff9db; border: 1.5px solid #ffec99;
+      border-radius: 10px; margin-top: 12px;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    .loading.visible { display: block; }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* Error */
+    .error-box {
+      display: none; margin-top: 12px; padding: 12px 14px; border-radius: 8px;
+      background: #fff5f5; color: #c92a2a; font-size: 13px; border: 1px solid #ffc9c9;
     }
 
     /* Results */
@@ -87,6 +152,7 @@
     }
     .pass-num.blue { background: #eff4ff; color: #3b5bdb; border: 1px solid #bac8ff; }
     .pass-num.green { background: #ebfbee; color: #2f9e44; border: 1px solid #b2f2bb; }
+    .pass-num.purple { background: #f3f0ff; color: #7048e8; border: 1px solid #d0bfff; }
     .pass-num.amber { background: #fff9db; color: #e67700; border: 1px solid #ffec99; }
     .pass-title { font-weight: 500; font-size: 14px; }
     .tag {
@@ -98,6 +164,7 @@
     .tag.green { background: #ebfbee; color: #2f9e44; border-color: #b2f2bb; }
     .tag.amber { background: #fff9db; color: #e67700; border-color: #ffec99; }
     .tag.red { background: #fff5f5; color: #c92a2a; border-color: #ffc9c9; }
+    .tag.purple { background: #f3f0ff; color: #7048e8; border-color: #d0bfff; }
     .note {
       margin-top: 12px; padding: 10px 14px;
       border-left: 2px solid #dee2e6; background: #f8f9fa;
@@ -150,21 +217,6 @@
     .ms-april-box { padding: 12px 14px; border-left: 2px solid #dee2e6; background: #f8f9fa; margin-top: 8px; }
     .ms-april-label { font-size: 10px; font-weight: 700; letter-spacing: 0.07em; color: #868e96; margin-bottom: 6px; }
     .ms-april-text { font-size: 14px; line-height: 1.7; color: #1a1a1a; }
-    .error-box {
-      margin-top: 12px; padding: 12px 14px; border-radius: 8px;
-      background: #fff5f5; color: #c92a2a; font-size: 13px; border: 1px solid #ffc9c9;
-    }
-    .loading {
-      text-align: center; padding: 1.5rem;
-      color: #1a1a1a; font-size: 15px; font-weight: 500;
-      background: #fff9db; border: 1.5px solid #ffec99;
-      border-radius: 10px; margin-top: 12px;
-      animation: pulse 1.5s ease-in-out infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
     .disclaimer {
       margin-top: 2rem; padding: 12px 16px;
       background: #f1f3f5; border-radius: 8px; border: 1px solid #dee2e6;
@@ -172,63 +224,100 @@
     }
     .disclaimer strong { color: #495057; }
     #results { display: none; }
-
-    /* Email gate modal */
-    .email-gate-overlay {
-      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;
-      z-index: 1000; padding: 1rem;
+    .perf-expectation {
+      font-size: 13px; color: #495057; line-height: 1.6;
+      padding: 6px 0; border-bottom: 0.5px solid #f1f3f5;
     }
-    .email-gate-modal {
-      background: #fff; border-radius: 12px; padding: 2rem 1.5rem;
-      max-width: 460px; width: 100%; box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-    }
-    .email-gate-modal h2 { font-size: 20px; font-weight: 600; margin-bottom: 12px; line-height: 1.3; }
-    .email-gate-modal p { font-size: 14px; line-height: 1.6; color: #495057; margin-bottom: 14px; }
-    .email-gate-modal input[type="email"] {
-      width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;
-      font-size: 14px; font-family: inherit; margin-bottom: 8px;
-    }
-    .email-gate-modal input[type="email"]:focus { outline: 2px solid #1a1a1a; border-color: transparent; }
-    .gate-fine-print { font-size: 11px; color: #868e96; margin-top: 8px; line-height: 1.5; }
+    .perf-expectation:last-child { border-bottom: none; }
   </style>
 </head>
 <body>
 <div class="wrap">
   <h1>Crown Decode™</h1>
-  <p class="sub">Analyze any hair product ingredient list. Take a photo of the label or paste the ingredients manually — Ms. April's 3-Pass Method™ does the rest.</p>
+  <p class="sub">Analyze any hair product ingredient list. Take a photo of the label or paste the ingredients manually — Ms. April's Three Pass Method does the rest.</p>
 
   <div id="inputArea">
-    <!-- Tab buttons -->
+    <!-- Step 1: Product Type -->
+    <span class="product-select-label">STEP 1 — WHAT TYPE OF PRODUCT IS THIS?</span>
+    <div class="product-grid">
+      <button class="product-btn" onclick="selectProduct(this, 'Shampoo / Cleanser')">
+        <span class="btn-icon">🧴</span>Shampoo / Cleanser
+      </button>
+      <button class="product-btn" onclick="selectProduct(this, 'Conditioner / Detangler')">
+        <span class="btn-icon">💧</span>Conditioner / Detangler
+      </button>
+      <button class="product-btn" onclick="selectProduct(this, 'Styling Product')">
+        <span class="btn-icon">✨</span>Styling Product (gel, mousse, cream, custard)
+      </button>
+      <button class="product-btn" onclick="selectProduct(this, 'Leave-in / Moisturizer')">
+        <span class="btn-icon">🌿</span>Leave-in / Moisturizer
+      </button>
+      <button class="product-btn" onclick="selectProduct(this, 'Treatment / Mask')">
+        <span class="btn-icon">🫙</span>Treatment / Mask
+      </button>
+      <button class="product-btn" onclick="selectProduct(this, 'Oil / Serum')">
+        <span class="btn-icon">🌾</span>Oil / Serum
+      </button>
+    </div>
+
+    <!-- Step 2: Input method -->
+    <span class="product-select-label">STEP 2 — ADD THE INGREDIENT LIST</span>
     <div class="input-tabs">
       <button class="tab-btn active" onclick="switchTab('camera')" id="tab-camera">📷 Take / Upload Photo</button>
       <button class="tab-btn" onclick="switchTab('manual')" id="tab-manual">✏️ Paste Manually</button>
     </div>
 
-    <!-- Camera / Upload section -->
+    <!-- Camera section -->
     <div class="camera-section visible" id="camera-section">
+      <div class="photo-tips">
+        <strong>📋 FOR BEST RESULTS</strong>
+        Make sure the ingredient label lies flat and isn't curved or wrinkled — no rounded bottles. Move to a well-lit area; natural light works best. Hold your camera close enough that the text is sharp and legible.
+      </div>
       <div class="upload-area" onclick="document.getElementById('imageInput').click()">
         <div class="upload-icon">📸</div>
         <div class="upload-label">Tap to take a photo or upload an image</div>
-        <div class="upload-hint">Point your camera at the ingredient list on the back of the bottle</div>
+        <div class="upload-hint">Point your camera at the ingredient list on the label</div>
       </div>
       <input type="file" id="imageInput" accept="image/*" capture="environment" onchange="handleImage(event)"/>
       <img id="previewImg" class="preview-img" alt="Label preview"/>
+
+      <!-- Readability status -->
+      <div class="read-status green" id="readGreen">
+        <div class="read-status-title">✅ Label read successfully</div>
+        <div class="read-status-body">The ingredient list was captured clearly. Review the text below and click Analyze when ready.</div>
+      </div>
+      <div class="read-status yellow" id="readYellow">
+        <div class="read-status-title">⚠️ Partially readable — please review</div>
+        <div class="read-status-body" id="readYellowMsg">Some text may have been missed. Review the extracted ingredients below and correct anything before analyzing.</div>
+      </div>
+      <div class="read-status red" id="readRed">
+        <div class="read-status-title">🔴 Photo could not be read clearly</div>
+        <div class="read-status-body">
+          <span id="readRedMsg"></span>
+          <ul>
+            <li>Make sure the ingredient label lies flat and isn't curved or wrinkled</li>
+            <li>Move to a well-lit area — natural light works best</li>
+            <li>Hold your camera close enough that the text is sharp and legible</li>
+            <li>Or switch to <strong>Paste Manually</strong> — Google the product and copy the ingredient list</li>
+          </ul>
+        </div>
+      </div>
+
       <div class="extracted-box" id="extractedBox">
         <div class="extracted-label">INGREDIENTS READ FROM PHOTO — REVIEW BEFORE ANALYZING</div>
         <textarea class="extracted-text" id="extractedText" placeholder="Extracted ingredients will appear here..."></textarea>
-        <button onclick="runAnalysis(document.getElementById('extractedText').value)" id="analyzeFromPhoto">Run 3-Pass Analysis ↗</button>
+        <button onclick="runAnalysis(document.getElementById('extractedText').value)" id="analyzeFromPhoto" disabled>Run Three Pass Analysis ↗</button>
       </div>
     </div>
 
-    <!-- Manual paste section -->
+    <!-- Manual section -->
     <div class="manual-section" id="manual-section">
       <textarea id="manualText" placeholder="Paste ingredient list here...&#10;&#10;Example: Water, Glycerin, Cetyl Alcohol, Shea Butter, Behentrimonium Methosulfate, Phenoxyethanol, Fragrance..."></textarea>
-      <button onclick="runAnalysis(document.getElementById('manualText').value)" id="analyzeFromText">Run 3-Pass Analysis ↗</button>
+      <button onclick="runAnalysis(document.getElementById('manualText').value)" id="analyzeFromText" disabled>Run Three Pass Analysis ↗</button>
     </div>
 
-    <div class="error-box" id="errorBox" style="display:none;"></div>
-    <div class="loading" id="loadingMsg" style="display:none;"></div>
+    <div class="error-box" id="errorBox"></div>
+    <div class="loading" id="loadingMsg"></div>
 
     <div class="disclaimer">
       <strong>For educational purposes only.</strong> Crown Decode™ is a learning tool, not a substitute for professional advice. Always cross-reference with a licensed cosmetologist before making decisions about your hair care routine.
@@ -239,6 +328,7 @@
   <div id="results">
     <div id="pass1" class="card"></div>
     <div id="pass2" class="card"></div>
+    <div id="performance" class="card"></div>
     <div id="pass3" class="card"></div>
     <div id="final" class="card"></div>
     <button class="secondary" onclick="resetApp()">← Analyze another product</button>
@@ -246,100 +336,29 @@
       <strong>For educational purposes only.</strong> Crown Decode™ is a learning tool, not a substitute for professional advice. Always cross-reference with a licensed cosmetologist before making decisions about your hair care routine.
     </div>
   </div>
-
-  <!-- Email gate modal -->
-  <div class="email-gate-overlay" id="emailGate" style="display:none;">
-    <div class="email-gate-modal">
-      <div id="gateForm">
-        <h2>Loved that decode?</h2>
-        <p>Drop your email and I'll send you a link to unlock unlimited analyses — plus a 5-part series on what your products are really doing for your hair.</p>
-        <input type="email" id="gateEmailInput" placeholder="your@email.com" onkeydown="if(event.key==='Enter') submitEmailGate()"/>
-        <button id="gateSubmit" onclick="submitEmailGate()">Unlock unlimited</button>
-        <button class="secondary" onclick="hideEmailGate()" style="margin-top:6px;">Not right now</button>
-        <p class="gate-fine-print">No spam. Just the framework. Unsubscribe anytime.</p>
-      </div>
-      <div id="gateWaiting" style="display:none;">
-        <h2>Check your inbox.</h2>
-        <p>I just sent a confirmation link to <strong id="gateSentEmail"></strong>.</p>
-        <p>Click the button in that email to unlock Crown Decode for unlimited analyses. The link should arrive in about 30 seconds. If you don't see it, check your spam folder.</p>
-        <button class="secondary" onclick="hideEmailGate()">Close</button>
-      </div>
-    </div>
-  </div>
 </div>
 
 <script>
-  // ===== GATE STATE MANAGEMENT =====
-  function getUsageCount() {
-    try { return parseInt(localStorage.getItem('crownDecode_usageCount') || '0', 10); }
-    catch(e) { return 0; }
-  }
-  function incrementUsageCount() {
-    try { localStorage.setItem('crownDecode_usageCount', (getUsageCount() + 1).toString()); }
-    catch(e) {}
-  }
-  function isVerified() {
-    try { return localStorage.getItem('crownDecode_verified') === 'true'; }
-    catch(e) { return false; }
-  }
-  function shouldShowGate() {
-    return getUsageCount() >= 1 && !isVerified();
+  let selectedProductType = '';
+
+  function selectProduct(btn, type) {
+    document.querySelectorAll('.product-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedProductType = type;
+    updateAnalyzeButtons();
   }
 
-  // ===== EMAIL GATE MODAL =====
-  let pendingIngredients = '';
-
-  function showEmailGate(ingredients) {
-    pendingIngredients = ingredients || '';
-    document.getElementById('emailGate').style.display = 'flex';
-    document.getElementById('gateForm').style.display = 'block';
-    document.getElementById('gateWaiting').style.display = 'none';
-    document.getElementById('gateEmailInput').value = '';
-    setTimeout(() => document.getElementById('gateEmailInput').focus(), 100);
+  function updateAnalyzeButtons() {
+    const hasProduct = selectedProductType !== '';
+    const hasExtracted = document.getElementById('extractedText').value.trim() !== '';
+    const hasManual = document.getElementById('manualText').value.trim() !== '';
+    document.getElementById('analyzeFromPhoto').disabled = !hasProduct || !hasExtracted;
+    document.getElementById('analyzeFromText').disabled = !hasProduct || !hasManual;
   }
 
-  function hideEmailGate() {
-    document.getElementById('emailGate').style.display = 'none';
-  }
+  document.getElementById('manualText').addEventListener('input', updateAnalyzeButtons);
+  document.getElementById('extractedText').addEventListener('input', updateAnalyzeButtons);
 
-  async function submitEmailGate() {
-    const emailInput = document.getElementById('gateEmailInput');
-    const email = emailInput.value.trim();
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      alert('Please enter a valid email address.');
-      return;
-    }
-    const submitBtn = document.getElementById('gateSubmit');
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Sending...';
-
-    try {
-      const res = await fetch('/api/send-verification', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      });
-      const data = await res.json();
-
-      if (data.error) {
-        alert(data.error);
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Unlock unlimited';
-        return;
-      }
-
-      // Show waiting state
-      document.getElementById('gateForm').style.display = 'none';
-      document.getElementById('gateWaiting').style.display = 'block';
-      document.getElementById('gateSentEmail').textContent = email;
-    } catch (err) {
-      alert('Could not send the verification email. Please try again.');
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Unlock unlimited';
-    }
-  }
-
-  // ===== TAB SWITCHING =====
   function switchTab(tab) {
     document.getElementById('camera-section').classList.toggle('visible', tab === 'camera');
     document.getElementById('manual-section').classList.toggle('visible', tab === 'manual');
@@ -347,27 +366,31 @@
     document.getElementById('tab-manual').classList.toggle('active', tab === 'manual');
   }
 
-  // ===== ERROR / LOADING =====
   function showError(msg) {
     const b = document.getElementById('errorBox');
-    b.textContent = msg; b.style.display = 'block';
+    b.textContent = typeof msg === 'string' ? msg : (msg.message || 'Something went wrong. Try again.');
+    b.style.display = 'block';
   }
 
-  function clearError() {
-    document.getElementById('errorBox').style.display = 'none';
-  }
+  function clearError() { document.getElementById('errorBox').style.display = 'none'; }
 
   function setLoading(msg) {
     const l = document.getElementById('loadingMsg');
-    if (msg) { l.textContent = msg; l.style.display = 'block'; }
-    else { l.style.display = 'none'; }
+    if (msg) { l.textContent = msg; l.classList.add('visible'); }
+    else { l.classList.remove('visible'); }
   }
 
-  // ===== IMAGE EXTRACTION =====
+  function hideAllReadStatus() {
+    ['readGreen','readYellow','readRed'].forEach(id => {
+      document.getElementById(id).style.display = 'none';
+    });
+  }
+
   async function handleImage(event) {
     const file = event.target.files[0];
     if (!file) return;
     clearError();
+    hideAllReadStatus();
 
     const preview = document.getElementById('previewImg');
     preview.src = URL.createObjectURL(file);
@@ -375,8 +398,7 @@
 
     const reader = new FileReader();
     reader.onload = async function(e) {
-      const dataUrl = e.target.result;
-      const base64 = dataUrl.split(',')[1];
+      const base64 = e.target.result.split(',')[1];
       const mediaType = file.type || 'image/jpeg';
 
       setLoading('Reading the label...');
@@ -392,13 +414,28 @@
         setLoading('');
 
         if (data.error) { showError(data.error); return; }
-        if (!data.ingredients || data.ingredients.trim() === 'UNCLEAR') {
-          showError('The photo was not clear enough to read. Try better lighting or a closer shot — or paste the ingredients manually.');
+
+        if (data.readability === 'UNCLEAR') {
+          document.getElementById('readRedMsg').textContent = data.issue ? data.issue + ' ' : '';
+          document.getElementById('readRed').style.display = 'block';
           return;
         }
 
-        document.getElementById('extractedText').value = data.ingredients;
+        if (data.readability === 'PARTIAL') {
+          document.getElementById('readYellowMsg').textContent = (data.issue || 'Some text may have been missed.') + ' Review the extracted ingredients below and correct anything before analyzing.';
+          document.getElementById('readYellow').style.display = 'block';
+          document.getElementById('extractedText').value = data.ingredients || '';
+          document.getElementById('extractedBox').style.display = 'block';
+          updateAnalyzeButtons();
+          return;
+        }
+
+        // CLEAR
+        document.getElementById('readGreen').style.display = 'block';
+        document.getElementById('extractedText').value = data.ingredients || '';
         document.getElementById('extractedBox').style.display = 'block';
+        updateAnalyzeButtons();
+
       } catch (err) {
         setLoading('');
         showError('Something went wrong reading the image. Try again or paste manually.');
@@ -407,34 +444,28 @@
     reader.readAsDataURL(file);
   }
 
-  // ===== ANALYSIS WITH GATE =====
   async function runAnalysis(ingredients) {
     if (!ingredients || !ingredients.trim()) {
-      showError('No ingredients to analyze. Paste a list or take a photo first.');
-      return;
+      showError('No ingredients to analyze.'); return;
+    }
+    if (!selectedProductType) {
+      showError('Please select a product type first (Step 1).'); return;
     }
     clearError();
-
-    // Gate check: if user has used their free decode and isn't verified, show modal
-    if (shouldShowGate()) {
-      showEmailGate(ingredients);
-      return;
-    }
-
     setLoading('Flipping the bottle over...');
 
     try {
       const res = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ingredients })
+        body: JSON.stringify({ ingredients, productType: selectedProductType })
       });
       const data = await res.json();
       setLoading('');
 
       if (data.error) {
-        const msg = typeof data.error === 'string' ? data.error : (data.error.message || JSON.stringify(data.error));
-        showError(msg); return;
+        showError(typeof data.error === 'string' ? data.error : (data.error.message || 'API error. Try again.'));
+        return;
       }
 
       const rawText = data.content?.[0]?.text || '';
@@ -444,9 +475,11 @@
       try { parsed = JSON.parse(clean); }
       catch { showError('Could not read the analysis. Try again.'); return; }
 
-      if (parsed.error) { showError(typeof parsed.error === 'string' ? parsed.error : (parsed.error.message || 'Unknown error')); return; }
+      if (parsed.error) {
+        showError(typeof parsed.error === 'string' ? parsed.error : (parsed.error.message || 'Unknown error'));
+        return;
+      }
 
-      incrementUsageCount();
       renderResults(parsed);
     } catch (err) {
       setLoading('');
@@ -454,7 +487,6 @@
     }
   }
 
-  // ===== RENDER HELPERS (unchanged from original) =====
   function tag(text, color) {
     return `<span class="tag${color ? ' ' + color : ''}">${text}</span>`;
   }
@@ -465,13 +497,6 @@
     const posText = position && position !== 'none' ? ` — ${position} on list` : '';
     const tags = items.map(i => tag(i, color)).join('');
     const hasDetail = whatItIs || whatItMeansForYourHair || whatToWatch || context;
-    const detail = hasDetail ? `
-      <div class="flag-detail" id="${id}">
-        ${whatItIs ? `<div class="detail-label">WHAT IT IS</div><div class="detail-text">${whatItIs}</div>` : ''}
-        ${whatItMeansForYourHair ? `<div class="detail-label">WHAT IT MEANS FOR YOUR HAIR</div><div class="detail-text">${whatItMeansForYourHair}</div>` : ''}
-        ${whatToWatch ? `<div class="detail-label">WHAT TO WATCH FOR</div><div class="detail-text">${whatToWatch}</div>` : ''}
-        ${context ? `<div class="detail-label">CONTEXT IN THIS FORMULA</div><div class="detail-text">${context}</div>` : ''}
-      </div>` : '';
     return `
       <div class="flag-block ${color}">
         <div class="flag-header ${color}" onclick="toggleFlag('${id}', this)">
@@ -481,7 +506,12 @@
           </div>
           ${hasDetail ? `<span class="flag-toggle ${color}">▼ more</span>` : ''}
         </div>
-        ${detail}
+        ${hasDetail ? `<div class="flag-detail" id="${id}">
+          ${whatItIs ? `<div class="detail-label">WHAT IT IS</div><div class="detail-text">${whatItIs}</div>` : ''}
+          ${whatItMeansForYourHair ? `<div class="detail-label">WHAT IT MEANS FOR YOUR HAIR</div><div class="detail-text">${whatItMeansForYourHair}</div>` : ''}
+          ${whatToWatch ? `<div class="detail-label">WHAT TO WATCH FOR</div><div class="detail-text">${whatToWatch}</div>` : ''}
+          ${context ? `<div class="detail-label">CONTEXT IN THIS FORMULA</div><div class="detail-text">${context}</div>` : ''}
+        </div>` : ''}
       </div>`;
   }
 
@@ -532,6 +562,17 @@
       <div class="pass-label"><div class="pass-num green">2</div><span class="pass-title">The Function — what does it DO?</span></div>
       ${catRows}
       <div class="note">${p2.verdict || ''}</div>`;
+
+    // Performance
+    const perf = r.performance || {};
+    const expectations = (perf.expectations || []).map(e =>
+      `<div class="perf-expectation">→ ${e}</div>`).join('');
+    document.getElementById('performance').innerHTML = `
+      <div class="pass-label"><div class="pass-num purple">★</div><span class="pass-title">Performance — what will you actually experience?</span></div>
+      ${tag(selectedProductType, 'purple')}
+      <p style="font-size:15px;font-weight:500;line-height:1.5;margin:12px 0 8px">${perf.headline || ''}</p>
+      <div style="margin-bottom:12px">${expectations}</div>
+      <div class="note">${perf.verdict || ''}</div>`;
 
     // Pass 3
     const p3 = r.pass3 || {};
@@ -607,7 +648,12 @@
     document.getElementById('previewImg').style.display = 'none';
     document.getElementById('extractedBox').style.display = 'none';
     document.getElementById('imageInput').value = '';
+    hideAllReadStatus();
     clearError();
+    setLoading('');
+    selectedProductType = '';
+    document.querySelectorAll('.product-btn').forEach(b => b.classList.remove('selected'));
+    updateAnalyzeButtons();
     switchTab('camera');
   }
 </script>
