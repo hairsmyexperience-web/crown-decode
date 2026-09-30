@@ -173,7 +173,7 @@ Then respond in this exact JSON format only — no other text:
     }
 
     const rawText = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('') || '';
-    const clean = rawText.replace(/```json|```/g, '').trim();
+       const clean = rawText.slice(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
     let parsed;
     try { parsed = JSON.parse(clean); }
     catch { return res.status(500).json({ error: 'Could not process the image response.' }); }
@@ -199,7 +199,7 @@ app.post('/api/analyze', async (req, res) => {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-5-5',
-        max_tokens: 4096,
+        max_tokens: 8000,
         system: SYSTEM_PROMPT,
         messages: [{
           role: 'user',
