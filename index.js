@@ -121,6 +121,7 @@ Rules:
 - redFlagCount = number of these five categories that have at least one found item: dryingAlcohols, heavyOcclusives, proteins, fragrance, harmful
 - putItBack = true ONLY if: drying alcohols are high on list with no conditioning counterbalance, OR DMDM Hydantoin is present, OR product claims moisture but has no water/oil/butter in first 3 ingredients
 - Fatty alcohols (Cetyl, Cetearyl, Behenyl) are NOT drying — list them in softening only, never in dryingAlcohols
+   - Aloe (Aloe Barbadensis Leaf Juice, aloe juice, aloe gel) is moisture — list it in moisture only, never in slip
 - Always populate all fields — never omit a key`;
 
 // Route 1: Extract ingredients from photo
