@@ -172,7 +172,7 @@ Then respond in this exact JSON format only — no other text:
       return res.status(500).json({ error: data.error.message || 'API error reading image.' });
     }
 
-    const rawText = data.content?.[0]?.text || '';
+    const rawText = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('') || '';
     const clean = rawText.replace(/```json|```/g, '').trim();
     let parsed;
     try { parsed = JSON.parse(clean); }
