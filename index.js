@@ -124,10 +124,66 @@ Rules:
    - Aloe (Aloe Barbadensis Leaf Juice, aloe juice, aloe gel) is moisture — list it in moisture only, never in slip
 - Always populate all fields — never omit a key`;
 
-// Route 1: Extract ingredients from photo
+// Route 1: Extract ingredients from one or more photos of the label.
+// Accepts { images: [{ imageBase64, mediaType }, ...] } (up to 4), or the
+// older single-photo shape { imageBase64, mediaType }.
+const MAX_PHOTOS = 4;
+
+function buildExtractPrompt(count) {
+  if (count === 1) {
+    return `Look at this image carefully.
+
+First, assess the readability of any ingredient list visible:
+- CLEAR: text is sharp, flat, fully legible
+- PARTIAL: some text readable but portions are blurry, cut off, or obscured
+- UNCLEAR: too blurry, dark, curved, or small to read reliably
+
+Then respond in this exact JSON format only — no other text:
+{
+  "readability": "CLEAR" or "PARTIAL" or "UNCLEAR",
+  "ingredients": "the full ingredient list exactly as written, or empty string if unreadable",
+  "issue": "if PARTIAL or UNCLEAR, one plain sentence describing the specific problem"
+}`;
+  }
+  return `These ${count} photos all show the SAME hair product label. The bottle is curved, so the person turned it a little between shots. Each photo shows a different slice of the same ingredient list, and neighboring photos overlap.
+
+Your job: rebuild the ONE complete ingredient list, in the order it appears on the label.
+- Read every photo. Use the overlapping words to line the slices up, the way you would line up torn pieces of a page.
+- Ingredient lists usually wrap across several lines. Follow each line across all photos before moving to the next line.
+- Include each ingredient once. Do not repeat ingredients that appear in two photos because of the overlap.
+- Do not guess or invent ingredients. If a word is cut off or blurry in every photo, leave it out and say so in "issue".
+- Ignore everything that is not the ingredient list (directions, warnings, marketing copy).
+
+Assess readability of the combined result:
+- CLEAR: the whole list was captured and every ingredient is legible
+- PARTIAL: most of the list was captured, but some part is missing, blurry, or cut off
+- UNCLEAR: the list could not be read reliably
+
+Respond in this exact JSON format only — no other text:
+{
+  "readability": "CLEAR" or "PARTIAL" or "UNCLEAR",
+  "ingredients": "the full merged ingredient list, comma-separated, in label order, or empty string if unreadable",
+  "issue": "if PARTIAL or UNCLEAR, one plain sentence saying what is missing and which edge of the bottle to photograph again"
+}`;
+}
+
 app.post('/api/extract-image', async (req, res) => {
-  const { imageBase64, mediaType } = req.body;
-  if (!imageBase64) return res.status(400).json({ error: 'No image provided.' });
+  let images = Array.isArray(req.body.images) ? req.body.images : [];
+  if (!images.length && req.body.imageBase64) {
+    images = [{ imageBase64: req.body.imageBase64, mediaType: req.body.mediaType }];
+  }
+  images = images.filter(img => img && img.imageBase64).slice(0, MAX_PHOTOS);
+  if (!images.length) return res.status(400).json({ error: 'No image provided.' });
+
+  const content = [];
+  images.forEach((img, i) => {
+    if (images.length > 1) content.push({ type: 'text', text: `Photo ${i + 1} of ${images.length}:` });
+    content.push({
+      type: 'image',
+      source: { type: 'base64', media_type: img.mediaType || 'image/jpeg', data: img.imageBase64 }
+    });
+  });
+  content.push({ type: 'text', text: buildExtractPrompt(images.length) });
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -140,31 +196,7 @@ app.post('/api/extract-image', async (req, res) => {
       body: JSON.stringify({
         model: 'claude-sonnet-5-5',
         max_tokens: 2000,
-        messages: [{
-          role: 'user',
-          content: [
-            {
-              type: 'image',
-              source: { type: 'base64', media_type: mediaType || 'image/jpeg', data: imageBase64 }
-            },
-            {
-              type: 'text',
-              text: `Look at this image carefully. 
-
-First, assess the readability of any ingredient list visible:
-- CLEAR: text is sharp, flat, fully legible
-- PARTIAL: some text readable but portions are blurry, cut off, or obscured
-- UNCLEAR: too blurry, dark, curved, or small to read reliably
-
-Then respond in this exact JSON format only — no other text:
-{
-  "readability": "CLEAR" or "PARTIAL" or "UNCLEAR",
-  "ingredients": "the full ingredient list exactly as written, or empty string if unreadable",
-  "issue": "if PARTIAL or UNCLEAR, one plain sentence describing the specific problem"
-}`
-            }
-          ]
-        }]
+        messages: [{ role: 'user', content }]
       })
     });
 

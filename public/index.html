@@ -68,10 +68,38 @@
     .upload-label { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
     .upload-hint { font-size: 12px; color: #868e96; }
     #imageInput { display: none; }
-    .preview-img {
-      width: 100%; border-radius: 8px; margin-top: 12px;
-      border: 1px solid #dee2e6; display: none;
+
+    /* Multi-photo strip */
+    .photo-strip {
+      display: none; grid-template-columns: repeat(4, 1fr);
+      gap: 8px; margin-top: 12px;
     }
+    .photo-strip.visible { display: grid; }
+    .thumb {
+      position: relative; aspect-ratio: 3 / 4; border-radius: 8px;
+      overflow: hidden; border: 1px solid #dee2e6; background: #f1f3f5;
+    }
+    .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .thumb-num {
+      position: absolute; left: 4px; top: 4px;
+      background: rgba(26,26,26,0.8); color: #fff;
+      font-size: 10px; font-weight: 600; border-radius: 10px; padding: 2px 6px;
+    }
+    .thumb-remove {
+      position: absolute; right: 4px; top: 4px; width: 24px; height: 24px;
+      margin: 0; padding: 0; border-radius: 50%;
+      background: rgba(255,255,255,0.92); color: #1a1a1a;
+      font-size: 14px; line-height: 24px; text-align: center;
+      border: 1px solid #dee2e6;
+    }
+    .thumb-add {
+      aspect-ratio: 3 / 4; border: 2px dashed #ddd; border-radius: 8px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 4px; margin: 0; padding: 6px; background: #fff; color: #495057;
+      font-size: 11px; font-weight: 500; line-height: 1.3; text-align: center;
+    }
+    .thumb-add span { font-size: 20px; line-height: 1; }
+    .photo-count { font-size: 12px; color: #868e96; margin-top: 8px; line-height: 1.5; }
 
     /* Readability feedback */
     .read-status { margin-top: 12px; border-radius: 8px; padding: 12px 14px; display: none; }
@@ -271,16 +299,19 @@
     <!-- Camera section -->
     <div class="camera-section visible" id="camera-section">
       <div class="photo-tips">
-        <strong>📋 FOR BEST RESULTS</strong>
-        Make sure the ingredient label lies flat and isn't curved or wrinkled — no rounded bottles. Move to a well-lit area; natural light works best. Hold your camera close enough that the text is sharp and legible.
+        <strong>📋 ROUND BOTTLE? TAKE 2–3 PHOTOS</strong>
+        Start at the left edge of the ingredient list. Snap a photo, turn the bottle a little, and snap again until you reach the right edge. Let each photo overlap the last one a bit. Turn off your flash, use good light, and fill the screen with the label. Flat label? One photo is enough.
       </div>
-      <div class="upload-area" onclick="document.getElementById('imageInput').click()">
+      <div class="upload-area" id="uploadArea" onclick="openCamera()">
         <div class="upload-icon">📸</div>
-        <div class="upload-label">Tap to take a photo or upload an image</div>
-        <div class="upload-hint">Point your camera at the ingredient list on the label</div>
+        <div class="upload-label">Tap to take the first photo</div>
+        <div class="upload-hint">Start with the left side of the ingredient list</div>
       </div>
-      <input type="file" id="imageInput" accept="image/*" capture="environment" onchange="handleImage(event)"/>
-      <img id="previewImg" class="preview-img" alt="Label preview"/>
+      <input type="file" id="imageInput" accept="image/*" capture="environment" multiple onchange="handleImage(event)"/>
+
+      <div class="photo-strip" id="photoStrip"></div>
+      <div class="photo-count" id="photoCount" style="display:none"></div>
+      <button id="readLabelBtn" style="display:none" onclick="readLabel()">Read the Label ↗</button>
 
       <!-- Readability status -->
       <div class="read-status green" id="readGreen">
@@ -296,8 +327,8 @@
         <div class="read-status-body">
           <span id="readRedMsg"></span>
           <ul>
-            <li>Make sure the ingredient label lies flat and isn't curved or wrinkled</li>
-            <li>Move to a well-lit area — natural light works best</li>
+            <li>On a round bottle, add another photo of the part that was missed, turning the bottle a little so the shots overlap</li>
+            <li>Turn off your flash to cut the glare, and move to a well-lit area</li>
             <li>Hold your camera close enough that the text is sharp and legible</li>
             <li>Or switch to <strong>Paste Manually</strong> — Google the product and copy the ingredient list</li>
           </ul>
@@ -387,62 +418,146 @@
     });
   }
 
+  // ---- Multi-photo capture ----
+  const MAX_PHOTOS = 4;
+  const MAX_EDGE = 1800;     // longest side in pixels after shrinking
+  let photos = [];           // [{ base64, mediaType, url }]
+
+  function openCamera() {
+    if (photos.length >= MAX_PHOTOS) return;
+    const input = document.getElementById('imageInput');
+    input.value = '';
+    input.click();
+  }
+
+  // Shrink big phone photos so several fit in one request and upload fast.
+  function shrinkPhoto(file) {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, MAX_EDGE / Math.max(img.naturalWidth, img.naturalHeight));
+        const w = Math.round(img.naturalWidth * scale);
+        const h = Math.round(img.naturalHeight * scale);
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
+        resolve({ base64: dataUrl.split(',')[1], mediaType: 'image/jpeg', url });
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Could not open that photo.')); };
+      img.src = url;
+    });
+  }
+
   async function handleImage(event) {
-    const file = event.target.files[0];
-    if (!file) return;
+    const files = Array.from(event.target.files || []);
+    if (!files.length) return;
+    clearError();
+    for (const file of files) {
+      if (photos.length >= MAX_PHOTOS) break;
+      try { photos.push(await shrinkPhoto(file)); }
+      catch (err) { showError(err.message); }
+    }
+    labelChanged();
+  }
+
+  function removePhoto(i) {
+    const [gone] = photos.splice(i, 1);
+    if (gone) URL.revokeObjectURL(gone.url);
+    labelChanged();
+  }
+
+  // Any change to the photo set means the old reading no longer applies.
+  function labelChanged() {
+    hideAllReadStatus();
+    document.getElementById('extractedBox').style.display = 'none';
+    document.getElementById('extractedText').value = '';
+    updateAnalyzeButtons();
+    renderPhotos();
+  }
+
+  function renderPhotos() {
+    const strip = document.getElementById('photoStrip');
+    const count = document.getElementById('photoCount');
+    const readBtn = document.getElementById('readLabelBtn');
+    const n = photos.length;
+
+    document.getElementById('uploadArea').style.display = n ? 'none' : 'block';
+    strip.classList.toggle('visible', n > 0);
+    count.style.display = n ? 'block' : 'none';
+    readBtn.style.display = n ? 'block' : 'none';
+
+    let html = photos.map((p, i) => `
+      <div class="thumb">
+        <img src="${p.url}" alt="Label photo ${i + 1}"/>
+        <span class="thumb-num">${i + 1}</span>
+        <button class="thumb-remove" onclick="removePhoto(${i})" aria-label="Remove photo ${i + 1}">×</button>
+      </div>`).join('');
+    if (n && n < MAX_PHOTOS) {
+      html += `<button class="thumb-add" onclick="openCamera()"><span>＋</span>Add next photo</button>`;
+    }
+    strip.innerHTML = html;
+
+    if (n === 1) {
+      count.textContent = 'Round bottle? Turn it a little and add the next photo. Flat label? Tap Read the Label.';
+    } else if (n > 1 && n < MAX_PHOTOS) {
+      count.textContent = `${n} photos. Add another if part of the list is still missing, or tap Read the Label.`;
+    } else if (n === MAX_PHOTOS) {
+      count.textContent = `${MAX_PHOTOS} photos is the limit. Tap Read the Label.`;
+    }
+    readBtn.textContent = n > 1 ? `Read the Label (${n} photos) ↗` : 'Read the Label ↗';
+  }
+
+  async function readLabel() {
+    if (!photos.length) return;
     clearError();
     hideAllReadStatus();
+    document.getElementById('extractedBox').style.display = 'none';
+    const readBtn = document.getElementById('readLabelBtn');
+    readBtn.disabled = true;
+    setLoading(photos.length > 1 ? 'Piecing the label together...' : 'Reading the label...');
 
-    const preview = document.getElementById('previewImg');
-    preview.src = URL.createObjectURL(file);
-    preview.style.display = 'block';
+    try {
+      const res = await fetch('/api/extract-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          images: photos.map(p => ({ imageBase64: p.base64, mediaType: p.mediaType }))
+        })
+      });
+      const data = await res.json();
+      setLoading('');
+      readBtn.disabled = false;
 
-    const reader = new FileReader();
-    reader.onload = async function(e) {
-      const base64 = e.target.result.split(',')[1];
-      const mediaType = file.type || 'image/jpeg';
+      if (data.error) { showError(data.error); return; }
 
-      setLoading('Reading the label...');
-      document.getElementById('extractedBox').style.display = 'none';
+      if (data.readability === 'UNCLEAR') {
+        document.getElementById('readRedMsg').textContent = data.issue ? data.issue + ' ' : '';
+        document.getElementById('readRed').style.display = 'block';
+        return;
+      }
 
-      try {
-        const res = await fetch('/api/extract-image', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ imageBase64: base64, mediaType })
-        });
-        const data = await res.json();
-        setLoading('');
-
-        if (data.error) { showError(data.error); return; }
-
-        if (data.readability === 'UNCLEAR') {
-          document.getElementById('readRedMsg').textContent = data.issue ? data.issue + ' ' : '';
-          document.getElementById('readRed').style.display = 'block';
-          return;
-        }
-
-        if (data.readability === 'PARTIAL') {
-          document.getElementById('readYellowMsg').textContent = (data.issue || 'Some text may have been missed.') + ' Review the extracted ingredients below and correct anything before analyzing.';
-          document.getElementById('readYellow').style.display = 'block';
-          document.getElementById('extractedText').value = data.ingredients || '';
-          document.getElementById('extractedBox').style.display = 'block';
-          updateAnalyzeButtons();
-          return;
-        }
-
-        // CLEAR
-        document.getElementById('readGreen').style.display = 'block';
+      if (data.readability === 'PARTIAL') {
+        document.getElementById('readYellowMsg').textContent = (data.issue || 'Some text may have been missed.') + ' Review the extracted ingredients below and correct anything before analyzing.';
+        document.getElementById('readYellow').style.display = 'block';
         document.getElementById('extractedText').value = data.ingredients || '';
         document.getElementById('extractedBox').style.display = 'block';
         updateAnalyzeButtons();
-
-      } catch (err) {
-        setLoading('');
-        showError('Something went wrong reading the image. Try again or paste manually.');
+        return;
       }
-    };
-    reader.readAsDataURL(file);
+
+      // CLEAR
+      document.getElementById('readGreen').style.display = 'block';
+      document.getElementById('extractedText').value = data.ingredients || '';
+      document.getElementById('extractedBox').style.display = 'block';
+      updateAnalyzeButtons();
+
+    } catch (err) {
+      setLoading('');
+      readBtn.disabled = false;
+      showError('Something went wrong reading the photos. Try again or paste manually.');
+    }
   }
 
   async function runAnalysis(ingredients) {
@@ -646,7 +761,9 @@
     document.getElementById('results').style.display = 'none';
     document.getElementById('manualText').value = '';
     document.getElementById('extractedText').value = '';
-    document.getElementById('previewImg').style.display = 'none';
+    photos.forEach(p => URL.revokeObjectURL(p.url));
+    photos = [];
+    renderPhotos();
     document.getElementById('extractedBox').style.display = 'none';
     document.getElementById('imageInput').value = '';
     hideAllReadStatus();
