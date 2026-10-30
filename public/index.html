@@ -1,6 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- Google Analytics (Crown Decode property) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-4BFLSD8GC2"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-4BFLSD8GC2');
+    // Count an app action. Never send emails or ingredient text.
+    function track(name, params) {
+      try { gtag('event', name, params || {}); } catch (e) {}
+    }
+  </script>
   <meta name="google-site-verification" content="mVd6KNc2zrJQXBF1PpEgJtX7PDwe2L1a9L_Vqw1MU0M" />
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -432,6 +444,7 @@
 
   function showEmailGate(ingredients) {
     pendingIngredients = ingredients || '';
+    track('email_gate_shown');
     document.getElementById('emailGate').style.display = 'flex';
     document.getElementById('gateForm').style.display = 'block';
     document.getElementById('gateWaiting').style.display = 'none';
@@ -469,6 +482,7 @@
         return;
       }
 
+      track('email_submitted');
       // Show waiting state
       document.getElementById('gateForm').style.display = 'none';
       document.getElementById('gateWaiting').style.display = 'block';
@@ -638,6 +652,7 @@
       const data = await res.json();
       setLoading('');
       readBtn.disabled = false;
+      track('label_read', { photo_count: photos.length, readability: data.error ? 'ERROR' : (data.readability || 'UNKNOWN') });
 
       if (data.error) { showError(data.error); return; }
 
@@ -713,6 +728,11 @@
       }
 
       incrementUsageCount();
+      track('analysis_complete', {
+        product_type: selectedProductType,
+        input_method: document.getElementById('camera-section').classList.contains('visible') ? 'photo' : 'paste',
+        put_it_back: !!(parsed.final && parsed.final.putItBack)
+      });
       renderResults(parsed);
     } catch (err) {
       setLoading('');

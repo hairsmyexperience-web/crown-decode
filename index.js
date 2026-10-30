@@ -400,6 +400,15 @@ function verificationSuccessPage(email) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Crown Decode™ — You're In</title>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-4BFLSD8GC2"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    // Report the page without the token in the address, so no email reaches Google.
+    gtag('config', 'G-4BFLSD8GC2', { page_location: location.origin + '/verify', page_title: 'Email verified' });
+    gtag('event', 'email_verified');
+  </script>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #fafaf8; color: #1a1a1a; padding: 1.5rem 1rem; margin: 0; }
     .wrap { max-width: 520px; margin: 4rem auto; text-align: center; }
