@@ -350,7 +350,7 @@
         <div class="read-status-body">The ingredient list was captured clearly. Review the text below and click Analyze when ready.</div>
       </div>
       <div class="read-status yellow" id="readYellow">
-        <div class="read-status-title">⚠️ Partially readable — please review</div>
+        <div class="read-status-title">⚠️ Partially readable. Please review</div>
         <div class="read-status-body" id="readYellowMsg">Some text may have been missed. Review the extracted ingredients below and correct anything before analyzing.</div>
       </div>
       <div class="read-status red" id="readRed">
@@ -361,13 +361,13 @@
             <li>On a round bottle, add another photo of the part that was missed, turning the bottle a little so the shots overlap</li>
             <li>Turn off your flash to cut the glare, and move to a well-lit area</li>
             <li>Hold your camera close enough that the text is sharp and legible</li>
-            <li>Or switch to <strong>Paste Manually</strong> — Google the product and copy the ingredient list</li>
+            <li>Or switch to <strong>Paste Manually</strong>, then Google the product and copy the ingredient list</li>
           </ul>
         </div>
       </div>
 
       <div class="extracted-box" id="extractedBox">
-        <div class="extracted-label">INGREDIENTS READ FROM PHOTO — REVIEW BEFORE ANALYZING</div>
+        <div class="extracted-label">INGREDIENTS READ FROM PHOTO: REVIEW BEFORE ANALYZING</div>
         <textarea class="extracted-text" id="extractedText" placeholder="Extracted ingredients will appear here..."></textarea>
         <button onclick="runAnalysis(document.getElementById('extractedText').value)" id="analyzeFromPhoto" disabled>Run Three Pass Analysis ↗</button>
       </div>
@@ -405,7 +405,7 @@
     <div class="email-gate-modal">
       <div id="gateForm">
         <h2>Loved that decode?</h2>
-        <p>Drop your email and I'll send you a link to unlock unlimited analyses — plus a 5-part series on what your products are really doing for your hair.</p>
+        <p>Drop your email and I'll send you a link to unlock unlimited analyses, plus a 5-part series on what your products are really doing for your hair.</p>
         <input type="email" id="gateEmailInput" placeholder="your@email.com" onkeydown="if(event.key==='Enter') submitEmailGate()"/>
         <button id="gateSubmit" onclick="submitEmailGate()">Unlock unlimited</button>
         <button class="secondary" onclick="hideEmailGate()" style="margin-top:6px;">Not right now</button>
@@ -747,7 +747,7 @@
   function flagBlock(title, items, position, whatItIs, whatItMeansForYourHair, whatToWatch, context, color) {
     if (!items || items.length === 0) return '';
     const id = 'flag-' + Math.random().toString(36).slice(2);
-    const posText = position && position !== 'none' ? ` — ${position} on list` : '';
+    const posText = position && position !== 'none' ? `, ${position} on list` : '';
     const tags = items.map(i => tag(i, color)).join('');
     const hasDetail = whatItIs || whatItMeansForYourHair || whatToWatch || context;
     return `
@@ -788,7 +788,7 @@
       </span>`).join('');
     const mc = p1.moistureCheck || {};
     document.getElementById('pass1').innerHTML = `
-      <div class="pass-label"><div class="pass-num blue">1</div><span class="pass-title">The Headline — what is this product?</span></div>
+      <div class="pass-label"><div class="pass-num blue">1</div><span class="pass-title">The Headline: what is this product?</span></div>
       <p style="font-size:15px;font-weight:500;line-height:1.5;margin-bottom:12px">${p1.headline || ''}</p>
       <div class="section-label">TOP 5 INGREDIENTS</div>
       <div style="margin-bottom:10px">${top5}</div>
@@ -812,7 +812,7 @@
         ${items && items.length > 0 ? items.map(i => tag(i, 'green')).join('') : '<span style="font-size:12px;color:#adb5bd;font-style:italic">none found</span>'}
       </div>`).join('');
     document.getElementById('pass2').innerHTML = `
-      <div class="pass-label"><div class="pass-num green">2</div><span class="pass-title">The Function — what does it DO?</span></div>
+      <div class="pass-label"><div class="pass-num green">2</div><span class="pass-title">The Function: what does it DO?</span></div>
       ${catRows}
       <div class="note">${p2.verdict || ''}</div>`;
 
@@ -821,7 +821,7 @@
     const expectations = (perf.expectations || []).map(e =>
       `<div class="perf-expectation">→ ${e}</div>`).join('');
     document.getElementById('performance').innerHTML = `
-      <div class="pass-label"><div class="pass-num purple">★</div><span class="pass-title">Performance — what will you actually experience?</span></div>
+      <div class="pass-label"><div class="pass-num purple">★</div><span class="pass-title">Performance: what will you actually experience?</span></div>
       ${tag(selectedProductType, 'purple')}
       <p style="font-size:15px;font-weight:500;line-height:1.5;margin:12px 0 8px">${perf.headline || ''}</p>
       <div style="margin-bottom:12px">${expectations}</div>

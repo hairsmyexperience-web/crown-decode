@@ -32,8 +32,8 @@ async function sendVerificationEmail(toEmail, verifyUrl) {
       <span style="word-break: break-all;">${verifyUrl}</span>
     </p>
     <div style="font-size: 12px; color: #868e96; margin-top: 24px; padding-top: 16px; border-top: 1px solid #e8e8e8; line-height: 1.6;">
-      This link expires in 24 hours. If you didn't request this, you can ignore this email — nothing will happen.<br><br>
-      — Ms. April<br>Studio HME
+      This link expires in 24 hours. If you didn't request this, you can ignore this email. Nothing will happen.<br><br>
+      Ms. April<br>Studio HME
     </div>
   </div>
 </body>
@@ -48,7 +48,7 @@ async function sendVerificationEmail(toEmail, verifyUrl) {
     body: JSON.stringify({
       from: fromEmail,
       to: toEmail,
-      subject: 'Unlock Crown Decode — confirm your email',
+      subject: 'Unlock Crown Decode: confirm your email',
       html
     })
   });
@@ -101,7 +101,7 @@ async function addToMailchimp(email) {
   throw new Error(errData.detail || 'Failed to add to Mailchimp');
 }
 
-const SYSTEM_PROMPT = `You are Crown Decode™, an AI-powered ingredient analysis tool built by Ms. April of Studio HME — a professional cosmetologist with 30+ years of experience. You analyze hair product ingredient lists using the Three Pass Method. This tool is for all hair types — straight, wavy, curly, and coily — and all textures.
+const SYSTEM_PROMPT = `You are Crown Decode™, an AI-powered ingredient analysis tool built by Ms. April of Studio HME: a professional cosmetologist with 30+ years of experience. You analyze hair product ingredient lists using the Three Pass Method. This tool is for all hair types: straight, wavy, curly, and coily: and all textures.
 
 When analyzing ingredients, speak to what the product does for hair in general first. Where a concern or benefit is specific to a hair type (for example, drying alcohols being more problematic for dry or porous hair, or heavy occlusives being better suited for coarse hair than fine hair), name the hair type clearly so the person can apply it to their own situation.
 
@@ -113,7 +113,7 @@ The user will tell you the product type. Use it to run a performance analysis sp
 - Treatment / Mask: evaluate protein vs. moisture balance, penetration potential, frequency suitability
 - Oil / Serum: evaluate whether oil penetrates or seals, buildup risk, best use in routine
 
-VOICE RULES — follow these without exception:
+VOICE RULES: follow these without exception:
 - Write the way a knowledgeable cosmetologist talks to a client she respects. Plain. Direct. Warm but no-nonsense.
 - Use real words only. Never invent compound words or blended terms.
 - No literary or dramatic language. No words like "mercy," "grace," "testament," "revelation," "ironically," or "notably."
@@ -121,8 +121,9 @@ VOICE RULES — follow these without exception:
 - Short sentences. If a sentence can be cut in half, cut it.
 - When something is a concern, say what it is and what it means for hair. No dramatic framing.
 - Do not use the words: folks, queen, queens, sacred, journey, empower, holistic, transformative.
+- Never use em dashes (—) anywhere in your output. Use a period, comma, or colon instead.
 
-Return ONLY valid JSON — no markdown fences, no preamble, nothing outside the JSON object.
+Return ONLY valid JSON: no markdown fences, no preamble, nothing outside the JSON object.
 
 {
   "pass1": {
@@ -144,7 +145,7 @@ Return ONLY valid JSON — no markdown fences, no preamble, nothing outside the 
   },
   "performance": {
     "headline": "One sentence: what using this product will actually feel like",
-    "expectations": ["2-3 specific observable outcomes the user will notice — what hair will feel like, behave like, or look like after use"],
+    "expectations": ["2-3 specific observable outcomes the user will notice: what hair will feel like, behave like, or look like after use"],
     "verdict": "2-3 sentences in Ms. April's voice on real-world performance of this specific product type"
   },
   "pass3": {
@@ -152,7 +153,7 @@ Return ONLY valid JSON — no markdown fences, no preamble, nothing outside the 
       "found": [],
       "position": "high or mid or low or none",
       "whatItIs": "1 plain sentence",
-      "whatItMeansForYourHair": "1-2 plain sentences — name specific hair types where relevant",
+      "whatItMeansForYourHair": "1-2 plain sentences: name specific hair types where relevant",
       "whatToWatch": "1-2 sentences",
       "context": "1-2 sentences"
     },
@@ -215,9 +216,9 @@ Rules:
 - Empty array [] for any category where nothing was found
 - redFlagCount = number of these five categories that have at least one found item: dryingAlcohols, heavyOcclusives, proteins, fragrance, harmful
 - putItBack = true ONLY if: drying alcohols are high on list with no conditioning counterbalance, OR DMDM Hydantoin is present, OR product claims moisture but has no water/oil/butter in first 3 ingredients
-- Fatty alcohols (Cetyl, Cetearyl, Behenyl) are NOT drying — list them in softening only, never in dryingAlcohols
-   - Aloe (Aloe Barbadensis Leaf Juice, aloe juice, aloe gel) is moisture — list it in moisture only, never in slip
-- Always populate all fields — never omit a key`;
+- Fatty alcohols (Cetyl, Cetearyl, Behenyl) are NOT drying: list them in softening only, never in dryingAlcohols
+   - Aloe (Aloe Barbadensis Leaf Juice, aloe juice, aloe gel) is moisture: list it in moisture only, never in slip
+- Always populate all fields: never omit a key`;
 
 // Route 1: Extract ingredients from one or more photos of the label.
 // Accepts { images: [{ imageBase64, mediaType }, ...] } (up to 4), or the
@@ -233,7 +234,7 @@ First, assess the readability of any ingredient list visible:
 - PARTIAL: some text readable but portions are blurry, cut off, or obscured
 - UNCLEAR: too blurry, dark, curved, or small to read reliably
 
-Then respond in this exact JSON format only — no other text:
+Then respond in this exact JSON format only: no other text:
 {
   "readability": "CLEAR" or "PARTIAL" or "UNCLEAR",
   "ingredients": "the full ingredient list exactly as written, or empty string if unreadable",
@@ -254,7 +255,7 @@ Assess readability of the combined result:
 - PARTIAL: most of the list was captured, but some part is missing, blurry, or cut off
 - UNCLEAR: the list could not be read reliably
 
-Respond in this exact JSON format only — no other text:
+Respond in this exact JSON format only: no other text:
 {
   "readability": "CLEAR" or "PARTIAL" or "UNCLEAR",
   "ingredients": "the full merged ingredient list, comma-separated, in label order, or empty string if unreadable",
@@ -399,7 +400,7 @@ function verificationSuccessPage(email) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Crown Decode™ — You're In</title>
+  <title>Crown Decode™ | You're In</title>
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-4BFLSD8GC2"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -425,7 +426,7 @@ function verificationSuccessPage(email) {
       <div class="check">✓</div>
       <h1>You're in.</h1>
       <p>Your email has been verified. Crown Decode is unlocked for unlimited analyses.</p>
-      <p style="color: #868e96; font-size: 13px;">Watch your inbox over the next two weeks — Ms. April has a five-email series coming with the framework behind every decode.</p>
+      <p style="color: #868e96; font-size: 13px;">Watch your inbox over the next two weeks. Ms. April has a five-email series coming with the framework behind every decode.</p>
       <a href="/" class="button">Decode another product</a>
     </div>
   </div>
@@ -442,7 +443,7 @@ function verificationErrorPage(message) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Crown Decode™ — Verification Issue</title>
+  <title>Crown Decode™ | Verification Issue</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #fafaf8; color: #1a1a1a; padding: 1.5rem 1rem; margin: 0; }
     .wrap { max-width: 520px; margin: 4rem auto; text-align: center; }
