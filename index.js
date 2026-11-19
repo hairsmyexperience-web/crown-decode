@@ -6,7 +6,11 @@ const jwt = require('jsonwebtoken');
 
 const app = express();
 app.use(express.json({ limit: '20mb' }));
-app.use(express.static(path.join(__dirname, 'public')));
+// acceptRanges: false makes the server always send the whole file.
+// Facebook and LinkedIn link-preview crawlers ask for part of a page; the
+// partial (206) reply came back with a broken compression header
+// (Facebook: "Curl error 61 BAD_CONTENT_ENCODING") and the preview stayed blank.
+app.use(express.static(path.join(__dirname, 'public'), { acceptRanges: false }));
 
 // Helper: send email via Resend HTTP API directly (no SDK)
 async function sendVerificationEmail(toEmail, verifyUrl) {
